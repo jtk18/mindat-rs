@@ -1,0 +1,3011 @@
+openapi: 3.0.3
+info:
+  title: Mindat API
+  version: 1.0.0
+  description: Mindat API
+paths:
+  /api-token-auth/:
+    post:
+      operationId: api_token_auth_create
+      tags:
+      - api-token-auth
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthToken'
+        required: true
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+          description: ''
+  /countries/:
+    get:
+      operationId: countries_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - countries
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCountriesList'
+          description: ''
+  /countries/{id}/:
+    get:
+      operationId: countries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this countries.
+        required: true
+      tags:
+      - countries
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Countries'
+          description: ''
+  /create/:
+    post:
+      operationId: create_create
+      tags:
+      - create
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /dana-8/:
+    get:
+      operationId: dana_8_retrieve
+      description: Disabling default list view, because we are using 'groups' action.
+      tags:
+      - dana-8
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /dana-8/{idtemp}/:
+    get:
+      operationId: dana_8_retrieve_2
+      description: Endpoint allows Dana 8th edition classifications to be viewed and
+        filtered.
+      parameters:
+      - in: path
+        name: idtemp
+        schema:
+          type: integer
+        description: A unique integer value identifying this dana1.
+        required: true
+      tags:
+      - dana-8
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /dana-8/groups/:
+    get:
+      operationId: dana_8_groups_retrieve
+      description: Endpoint allows Dana 8th edition classifications to be viewed and
+        filtered.
+      tags:
+      - dana-8
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /dana-8/subgroups/:
+    get:
+      operationId: dana_8_subgroups_retrieve
+      description: Endpoint allows Dana 8th edition classifications to be viewed and
+        filtered.
+      tags:
+      - dana-8
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /geomaterials/:
+    get:
+      operationId: geomaterials_list
+      description: |-
+        View to list Mindat items (minerals, groups, varieties, synonyms, rocks, commodities, etc.)
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: bi_max
+        schema:
+          type: string
+        description: 'Birifrigence. Range: bi_min - bi_max. Birifrigence is calculated
+          from refractive index as (rimax-rimin)'
+      - in: query
+        name: bi_min
+        schema:
+          type: string
+        description: 'Birifrigence. Range: bi_min - bi_max. Birifrigence is calculated
+          from refractive index as (rimax-rimin)'
+      - in: query
+        name: cleavagetype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Distinct/Good
+            - Imperfect/Fair
+            - None Observed
+            - Perfect
+            - Poor/Indistinct
+            - Very Good
+        description: 'Cleavage: multiple choice'
+        explode: true
+        style: form
+      - in: query
+        name: colour
+        schema:
+          type: string
+      - in: query
+        name: crystal_system
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Amorphous
+            - Hexagonal
+            - Icosahedral
+            - Isometric
+            - Monoclinic
+            - Orthorhombic
+            - Tetragonal
+            - Triclinic
+            - Trigonal
+        description: 'Crystal system (csystem): multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: density_max
+        schema:
+          type: number
+        description: Density measured, to (dmeas<=)
+      - in: query
+        name: density_min
+        schema:
+          type: number
+        description: Density measured, from (dmeas2>=)
+      - in: query
+        name: diapheny
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Opaque
+            - Translucent
+            - Transparent
+        description: 'Diapheny (transparency): multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: elements_exc
+        schema:
+          type: string
+        description: Exclude chemical elements, comma separated string
+      - in: query
+        name: elements_inc
+        schema:
+          type: string
+        description: Include chemical elements, comma separated string
+      - in: query
+        name: entrytype
+        schema:
+          type: array
+          items:
+            type: integer
+            enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+        description: 'Entry type. Multiple choice. Values: </br> <pre style=''white-space:
+          pre-wrap;''>0 - <b>mineral</b> </br>1 - <b>synonym</b> </br>2 - <b>variety</b>
+          </br>3 - <b>mixture</b> </br>4 - <b>series</b> </br>5 - <b>grouplist</b>
+          </br>6 - <b>polytype</b> </br>7 - <b>rock</b> </br>8 - <b>commodity</b>
+          </br></pre>'
+        explode: true
+        style: form
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - description
+            - type_localities
+            - locality
+            - relations
+            - minstats
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: id,longid,guid,name,updttime,mindat_formula,mindat_formula_note,ima_formula,ima_status,ima_notes,varietyof,synid,polytypeof,groupid,entrytype,entrytype_text,description_short,impurities,elements,sigelements,tlform,cim,occurrence,otheroccurrence,industrial,discovery_year,diapheny,cleavage,parting,tenacity,colour,csmetamict,opticalextinction,hmin,hardtype,hmax,vhnmin,vhnmax,vhnerror,vhng,vhns,luminescence,lustre,lustretype,aboutname,other,streak,csystem,cclass,spacegroup,a,b,c,alpha,beta,gamma,aerror,berror,cerror,alphaerror,betaerror,gammaerror,va3,z,dmeas,dmeas2,dcalc,dmeaserror,dcalcerror,cleavagetype,fracturetype,morphology,twinning,epitaxidescription,opticaltype,opticalsign,opticalalpha,opticalbeta,opticalgamma,opticalomega,opticalepsilon,opticalalpha2,opticalbeta2,opticalgamma2,opticalepsilon2,opticalomega2,opticaln,opticaln2,optical2vcalc,optical2vmeasured,optical2vcalc2,optical2vmeasured2,opticalalphaerror,opticalbetaerror,opticalgammaerror,opticalomegaerror,opticalepsilonerror,opticalnerror,optical2vcalcerror,optical2vmeasurederror,opticaldispersion,opticalpleochroism,opticalpleochorismdesc,opticalbirefringence,opticalcomments,opticalcolour,opticalinternal,opticaltropic,opticalanisotropism,opticalbireflectance,opticalr,uv,ir,magnetism,type_specimen_store,commenthard,cim,strunz10ed1,strunz10ed2,strunz10ed3,strunz10ed4,dana8ed1,dana8ed2,dana8ed3,dana8ed4,thermalbehaviour,commentluster,commentbreak,commentdense,commentcrystal,commentcolor,electrical,tranglide,nolocadd,specdispm,spacegroupset,approval_year,publication_year,ima_history,rock_parent,rock_parent2,rock_root,rock_bgs_code,meteoritical_code,key_elements,shortcode_ima,rimin,rimax,weighting,~all,*
+      - in: query
+        name: fracturetype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Conchoidal
+            - Fibrous
+            - Hackly
+            - Irregular/Uneven
+            - Micaceous
+            - None observed
+            - Splintery
+            - Step-Like
+            - Sub-Conchoidal
+        description: 'Fracture: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: groupid
+        schema:
+          type: integer
+      - in: query
+        name: hardness_max
+        schema:
+          type: number
+          format: float
+        description: Mohs hardness to (hmin<=)
+      - in: query
+        name: hardness_min
+        schema:
+          type: number
+          format: float
+        description: Mohs hardness from (hmax>=)
+      - in: query
+        name: id__in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: ima
+        schema:
+          type: boolean
+        description: Include IMA-approved names only (true) / exclude IMA-approved
+          (false)
+      - in: query
+        name: ima_notes
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            format: int64
+            nullable: true
+            enum:
+            - GROUP
+            - INTERMEDIATE
+            - NAMED_AMPHIBOLE
+            - PENDING_APPROVAL
+            - PUBLISHED_WITHOUT_APPROVAL
+            - REDEFINED
+            - REJECTED
+            - RENAMED
+            - UNNAMED_INVALID
+            - UNNAMED_VALID
+        description: 'Ima notes: multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: ima_status
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            format: int64
+            nullable: true
+            enum:
+            - APPROVED
+            - DISCREDITED
+            - GRANDFATHERED
+            - PENDING_PUBLICATION
+            - QUESTIONABLE
+        description: 'Ima status: multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: lustretype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Adamantine
+            - Dull
+            - Earthy
+            - Greasy
+            - Metallic
+            - Pearly
+            - Resinous
+            - Silky
+            - Sub-Adamantine
+            - Sub-Metallic
+            - Sub-Vitreous
+            - Vitreous
+            - Waxy
+        description: 'Lustretype: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: meteoritical_code
+        schema:
+          type: string
+        description: Meteoritical code. Text search supporting * and _ as wildcards
+      - in: query
+        name: meteoritical_code_exists
+        schema:
+          type: boolean
+        description: Meteoritical code exists. Include non-empty (true) / include
+          empty only (false)
+      - in: query
+        name: name
+        schema:
+          type: string
+        description: 'Name. Text search supporting * and _ as wildcards, e.g. "qu_rtz",
+          "bario*" '
+      - in: query
+        name: non_utf
+        schema:
+          type: boolean
+        description: Include non-UTF mineral names?
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: id,longid,guid,name,updttime,mindat_formula,mindat_formula_note,ima_formula,ima_status,ima_notes,varietyof,synid,polytypeof,groupid,entrytype,entrytype_text,description_short,impurities,elements,sigelements,tlform,cim,occurrence,otheroccurrence,industrial,discovery_year,diapheny,cleavage,parting,tenacity,colour,csmetamict,opticalextinction,hmin,hardtype,hmax,vhnmin,vhnmax,vhnerror,vhng,vhns,luminescence,lustre,lustretype,aboutname,other,streak,csystem,cclass,spacegroup,a,b,c,alpha,beta,gamma,aerror,berror,cerror,alphaerror,betaerror,gammaerror,va3,z,dmeas,dmeas2,dcalc,dmeaserror,dcalcerror,cleavagetype,fracturetype,morphology,twinning,epitaxidescription,opticaltype,opticalsign,opticalalpha,opticalbeta,opticalgamma,opticalomega,opticalepsilon,opticalalpha2,opticalbeta2,opticalgamma2,opticalepsilon2,opticalomega2,opticaln,opticaln2,optical2vcalc,optical2vmeasured,optical2vcalc2,optical2vmeasured2,opticalalphaerror,opticalbetaerror,opticalgammaerror,opticalomegaerror,opticalepsilonerror,opticalnerror,optical2vcalcerror,optical2vmeasurederror,opticaldispersion,opticalpleochroism,opticalpleochorismdesc,opticalbirefringence,opticalcomments,opticalcolour,opticalinternal,opticaltropic,opticalanisotropism,opticalbireflectance,opticalr,uv,ir,magnetism,type_specimen_store,commenthard,cim,strunz10ed1,strunz10ed2,strunz10ed3,strunz10ed4,dana8ed1,dana8ed2,dana8ed3,dana8ed4,thermalbehaviour,commentluster,commentbreak,commentdense,commentcrystal,commentcolor,electrical,tranglide,nolocadd,specdispm,spacegroupset,approval_year,publication_year,ima_history,rock_parent,rock_parent2,rock_root,rock_bgs_code,meteoritical_code,key_elements,shortcode_ima,rimin,rimax,weighting,~all,*
+      - in: query
+        name: optical2v_max
+        schema:
+          type: string
+        description: '2V. Range: optical2v_min - optical2v_max'
+      - in: query
+        name: optical2v_min
+        schema:
+          type: string
+        description: '2V. Range: optical2v_min - optical2v_max'
+      - in: query
+        name: opticalsign
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - +
+          - +/-
+          - '-'
+        description: 'Optical sign: single choice'
+      - in: query
+        name: opticaltype
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - Biaxial
+          - Isotropic
+          - Uniaxial
+        description: 'Optical type: single choice'
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - approval_year
+          - id
+          - minstats__ms_locentries
+          - minstats__ms_photos
+          - name
+          - updttime
+          - weighting
+        description: Order the response by a field. Prepend "-" to the field name
+          for descending order.
+        examples:
+          SortByIdDescending_:
+            value: -id
+            summary: 'sort by id descending '
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: polytypeof
+        schema:
+          type: integer
+      - name: q
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: ri_max
+        schema:
+          type: number
+          format: float
+        description: Refractive index, to (rimin<=)
+      - in: query
+        name: ri_min
+        schema:
+          type: number
+          format: float
+        description: Refractive index, from (rimax>=)
+      - in: query
+        name: streak
+        schema:
+          type: string
+      - in: query
+        name: synid
+        schema:
+          type: integer
+      - in: query
+        name: tenacity
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - brittle
+            - elastic
+            - flexible
+            - fragile
+            - malleable
+            - sectile
+            - very brittle
+            - waxy
+        description: 'Tenacity: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: updated_at
+        schema:
+          type: string
+          format: date-time
+        description: Last updated datetime in format %Y-%m-%d %H:%M:%S
+      - in: query
+        name: varietyof
+        schema:
+          type: integer
+      tags:
+      - geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMineralListList'
+          description: ''
+  /geomaterials/{id}/:
+    get:
+      operationId: geomaterials_retrieve
+      description: |-
+        View to list Mindat items (minerals, groups, varieties, synonyms, rocks, commodities, etc.)
+        * Requires token or login authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this minerals.
+        required: true
+      tags:
+      - geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+          description: ''
+  /geomaterials/{id}/varieties/:
+    get:
+      operationId: geomaterials_varieties_retrieve
+      description: Action for retrieving the varieties of a specific mineral
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this minerals.
+        required: true
+      tags:
+      - geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+          description: ''
+  /geomaterials/dict/:
+    get:
+      operationId: geomaterials_dict_retrieve
+      description: Action for displaying a dictionary of values for a field
+      tags:
+      - geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+          description: ''
+  /geomaterials_search/:
+    get:
+      operationId: geomaterials_search_list
+      description: Test description for minerals search
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: size
+        schema:
+          type: integer
+      tags:
+      - geomaterials_search
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PasscodeResponse'
+          description: ''
+        '400':
+          description: Missing callsign
+  /localities/:
+    get:
+      operationId: localities_list
+      parameters:
+      - in: query
+        name: country
+        schema:
+          type: string
+          enum:
+          - Afghanistan
+          - Albania
+          - Algeria
+          - American Samoa
+          - Andorra
+          - Angola
+          - Anguilla
+          - Antigua and Barbuda
+          - Argentina
+          - Armenia
+          - Aruba
+          - Ashmore and Cartier Islands
+          - Australia
+          - Austria
+          - Azerbaijan
+          - Bahamas
+          - Bahrain
+          - Bangladesh
+          - Barbados
+          - Belarus
+          - Belgium
+          - Belize
+          - Benin
+          - Bermuda
+          - Bhutan
+          - Bolivia
+          - Bosnia And Herzegovina
+          - Botswana
+          - Bouvet Island
+          - Brazil
+          - British Indian Ocean Territories
+          - British Solomon Islands
+          - British Virgin Islands
+          - Brunei
+          - Bulgaria
+          - Burkina Faso
+          - Burundi
+          - Cambodia
+          - Cameroon
+          - Canada
+          - Cape Verde
+          - Cayman Islands
+          - Central African Republic
+          - Chad
+          - Chile
+          - China
+          - Christmas Island
+          - Cocos Islands
+          - Colombia
+          - Comoro Islands
+          - Cook Islands
+          - Costa Rica
+          - Croatia
+          - Cuba
+          - Cyprus
+          - Czech Republic
+          - Democratic Republic of the Congo
+          - Denmark
+          - Djibouti
+          - Dominica
+          - Dominican Republic
+          - East Timor
+          - Ecuador
+          - Egypt
+          - El Salvador
+          - Equatorial Guinea
+          - Estonia
+          - Ethiopia
+          - Faeroe Islands
+          - Falkland Islands
+          - Federated States of Micronesia
+          - Fiji
+          - Finland
+          - France
+          - French Guiana
+          - French Polynesia
+          - Gabon
+          - Gambia
+          - Georgia
+          - Germany
+          - Ghana
+          - Gibraltar
+          - Greece
+          - Greenland
+          - Grenada
+          - Guadeloupe
+          - Guam
+          - Guatemala
+          - Guernsey
+          - Guinea
+          - Guinea-Bissau
+          - Guyana
+          - Haiti
+          - Honduras
+          - Hong Kong
+          - Hungary
+          - Iceland
+          - India
+          - Indonesia
+          - Iran
+          - Iraq
+          - Ireland
+          - Isle of Man
+          - Israel
+          - Italy
+          - Ivory Coast (Côte d'Ivoire)
+          - Jamaica
+          - Japan
+          - Jersey
+          - Jordan
+          - Kazakhstan
+          - Kenya
+          - 'Kiribati '
+          - Kosovo
+          - Kuwait
+          - Kyrgyzstan
+          - Laos
+          - Latvia
+          - Lebanon
+          - Lesotho
+          - Liberia
+          - Libya
+          - Liechtenstein
+          - Lithuania
+          - Luxembourg
+          - Macao
+          - Madagascar
+          - Malawi
+          - Malaysia
+          - Maldives
+          - Mali
+          - Malta
+          - Martinique
+          - Mauritania
+          - Mauritius
+          - Mexico
+          - Moldova
+          - Monaco
+          - Mongolia
+          - Montenegro
+          - Montserrat
+          - Morocco
+          - Mozambique
+          - Myanmar
+          - Namibia
+          - Nauru
+          - Nepal
+          - Netherlands
+          - Netherlands Antilles
+          - New Caledonia
+          - New Zealand
+          - Nicaragua
+          - Niger
+          - Nigeria
+          - North Korea
+          - Norway
+          - Oman
+          - Pakistan
+          - Panama
+          - Papua New Guinea
+          - Paraguay
+          - Peru
+          - Philippines
+          - Poland
+          - Portugal
+          - Puerto Rico
+          - Qatar
+          - Republic of Congo (Brazzaville)
+          - Republic of Macedonia
+          - Reunion Island
+          - Romania
+          - Russia
+          - Rwanda
+          - Saint Helena
+          - 'Saint Lucia '
+          - Saint Vincent and the Grenadines
+          - San Marino
+          - Sao Tome And Principe
+          - Saudi Arabia
+          - Senegal
+          - Serbia
+          - Seychelles
+          - Sierra Leone
+          - Singapore
+          - Slovakia
+          - Slovenia
+          - Solomon Islands
+          - Somalia
+          - South Africa
+          - South Korea
+          - Spain
+          - Sri Lanka
+          - St Christopher-Nevis Islands
+          - Sudan
+          - Suriname
+          - Swaziland
+          - Sweden
+          - Switzerland
+          - Syria
+          - Taiwan
+          - Tajikistan
+          - Tanzania
+          - Thailand
+          - Togo
+          - Tonga
+          - Trinidad And Tobago
+          - Tunisia
+          - Turkey
+          - Turkmenistan
+          - Turks And Caicos Islands
+          - Tuvalu
+          - U.S. Virgin Islands
+          - Uganda
+          - Ukraine
+          - United Arab Emirates
+          - United Kingdom
+          - United States
+          - Uruguay
+          - Uzbekistan
+          - 'Vanuatu (Republic of Vanuatu; New Hebrides) '
+          - Venezuela
+          - Vietnam
+          - Western Sahara
+          - Western Samoa
+          - Yemen
+          - Zambia
+          - Zimbabwe
+        description: Country name (e.g. Brazil)
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: description
+        schema:
+          type: string
+        description: Locality description contains
+      - in: query
+        name: elements_exc
+        schema:
+          type: string
+        description: Exclude chemical elements, comma separated string
+      - in: query
+        name: elements_inc
+        schema:
+          type: string
+        description: Include chemical elements, comma separated string
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - geomaterials
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: id,longid,guid,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
+      - in: query
+        name: id__in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: id,longid,guid,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
+      - in: query
+        name: txt
+        schema:
+          type: string
+        description: Locality name contains
+      - in: query
+        name: updated_at
+        schema:
+          type: string
+          format: date-time
+        description: Last updated datetime >= input value. Format %Y-%m-%d %H:%M:%S
+      tags:
+      - localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocalityList'
+          description: ''
+  /localities/{id}/:
+    get:
+      operationId: localities_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this localities.
+        required: true
+      tags:
+      - localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locality'
+          description: ''
+  /locality_age/:
+    get:
+      operationId: locality_age_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - locality_age
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAgeList'
+          description: ''
+  /locality_age/{age_id}/:
+    get:
+      operationId: locality_age_retrieve
+      parameters:
+      - in: path
+        name: age_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this age.
+        required: true
+      tags:
+      - locality_age
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Age'
+          description: ''
+  /locality_status/:
+    get:
+      operationId: locality_status_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - locality_status
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocstatusList'
+          description: ''
+  /locality_status/{ls_id}/:
+    get:
+      operationId: locality_status_retrieve
+      parameters:
+      - in: path
+        name: ls_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this locstatus.
+        required: true
+      tags:
+      - locality_status
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locstatus'
+          description: ''
+  /locality_type/:
+    get:
+      operationId: locality_type_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - locality_type
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLoctypesList'
+          description: ''
+  /locality_type/{lt_id}/:
+    get:
+      operationId: locality_type_retrieve
+      parameters:
+      - in: path
+        name: lt_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this loctypes.
+        required: true
+      tags:
+      - locality_type
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loctypes'
+          description: ''
+  /locgeoregion2/:
+    get:
+      operationId: locgeoregion2_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - locgeoregion2
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocGeoregionList'
+          description: ''
+  /locobject/{id}/:
+    get:
+      operationId: locobject_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - locobject
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /minerals_ima/:
+    get:
+      operationId: minerals_ima_list
+      description: |-
+        View to list IMA approved mineral species.
+        * Requires no authentication.
+      parameters:
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: id,name,ima_formula,ima_symbol,ima_year,discovery_year,ima_status,ima_notes,type_specimen_store,mindat_longid,mindat_guid,type_localities,description_short,mindat_formula,mindat_formula_note,~all,*
+      - in: query
+        name: id__in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: ima
+        schema:
+          type: integer
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: id,name,ima_formula,ima_symbol,ima_year,discovery_year,ima_status,ima_notes,type_specimen_store,mindat_longid,mindat_guid,type_localities,description_short,mindat_formula,mindat_formula_note,~all,*
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: q
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: updated_at
+        schema:
+          type: string
+          format: date-time
+        description: Last updated datetime in format %Y-%m-%d %H:%M:%S
+      tags:
+      - minerals_ima
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIMAMineralListList'
+          description: ''
+  /minerals_ima/{id}/:
+    get:
+      operationId: minerals_ima_retrieve
+      description: |-
+        View to list IMA approved mineral species.
+        * Requires no authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this minerals.
+        required: true
+      tags:
+      - minerals_ima
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+          description: ''
+  /nickel-strunz-10/:
+    get:
+      operationId: nickel_strunz_10_retrieve
+      description: Disabling default list view, because we are using 'classes' action.
+      tags:
+      - nickel-strunz-10
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /nickel-strunz-10/{id}/:
+    get:
+      operationId: nickel_strunz_10_retrieve_2
+      description: |-
+        Endpoint allows Nickel-Strunz 10th edition classifications to be viewed and filtered.
+        Currently, it lists counts of minerals in each class, subclass and family.
+        Feel free to improve or add more filters.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this strunz10 ed1.
+        required: true
+      tags:
+      - nickel-strunz-10
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /nickel-strunz-10/classes/:
+    get:
+      operationId: nickel_strunz_10_classes_retrieve
+      description: |-
+        Endpoint allows Nickel-Strunz 10th edition classifications to be viewed and filtered.
+        Currently, it lists counts of minerals in each class, subclass and family.
+        Feel free to improve or add more filters.
+      tags:
+      - nickel-strunz-10
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /nickel-strunz-10/families/:
+    get:
+      operationId: nickel_strunz_10_families_retrieve
+      description: |-
+        Endpoint allows Nickel-Strunz 10th edition classifications to be viewed and filtered.
+        Currently, it lists counts of minerals in each class, subclass and family.
+        Feel free to improve or add more filters.
+      tags:
+      - nickel-strunz-10
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /nickel-strunz-10/subclasses/:
+    get:
+      operationId: nickel_strunz_10_subclasses_retrieve
+      description: |-
+        Endpoint allows Nickel-Strunz 10th edition classifications to be viewed and filtered.
+        Currently, it lists counts of minerals in each class, subclass and family.
+        Feel free to improve or add more filters.
+      tags:
+      - nickel-strunz-10
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /photocount/:
+    get:
+      operationId: photocount_retrieve
+      tags:
+      - photocount
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Age:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        age_id:
+          type: integer
+          readOnly: true
+        age_mav:
+          type: number
+          format: double
+        age_pmv:
+          type: number
+          format: double
+        age_ma2v:
+          type: number
+          format: double
+        age_pm2v:
+          type: number
+          format: double
+        agemethod:
+          type: string
+          maxLength: 255
+        agereference:
+          type: string
+          maxLength: 255
+        age_ma:
+          type: string
+          maxLength: 32
+        age_pm:
+          type: string
+          maxLength: 32
+        age_ma2:
+          type: string
+          maxLength: 32
+        age_pm2:
+          type: string
+          maxLength: 32
+        ages1:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ages2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        age_type:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - age_id
+      - age_ma
+      - age_ma2
+      - age_ma2v
+      - age_mav
+      - age_pm
+      - age_pm2
+      - age_pm2v
+      - age_pmv
+      - age_type
+      - agemethod
+      - agereference
+      - ages1
+      - ages2
+    AuthToken:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - password
+      - token
+      - username
+    BlankEnum:
+      enum:
+      - ''
+    CleavagetypeEnum:
+      enum:
+      - None Observed
+      - Poor/Indistinct
+      - Imperfect/Fair
+      - Distinct/Good
+      - Very Good
+      - Perfect
+      type: string
+    Countries:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          maxLength: 255
+        continent:
+          type: string
+          maxLength: 2
+        iso:
+          type: string
+          maxLength: 2
+        latdir:
+          type: string
+          maxLength: 1
+        longdir:
+          type: string
+          maxLength: 1
+      required:
+      - continent
+      - id
+      - iso
+      - latdir
+      - longdir
+      - text
+    CsystemEnum:
+      enum:
+      - Isometric
+      - Orthorhombic
+      - Hexagonal
+      - Trigonal
+      - Tetragonal
+      - Monoclinic
+      - Triclinic
+      - Amorphous
+      - Icosahedral
+      type: string
+    DiaphenyEnum:
+      enum:
+      - Transparent
+      - Translucent
+      - Opaque
+      type: string
+    EntrytypeEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      type: integer
+    FracturetypeEnum:
+      enum:
+      - None observed
+      - Irregular/Uneven
+      - Splintery
+      - Hackly
+      - Conchoidal
+      - Sub-Conchoidal
+      - Fibrous
+      - Micaceous
+      - Step-Like
+      type: string
+    GisFeatureCollectionEnum:
+      type: string
+      enum:
+      - FeatureCollection
+    GisFeatureEnum:
+      type: string
+      enum:
+      - Feature
+    IMAMineralList:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          maxLength: 255
+        ima_formula:
+          type: string
+        ima_symbol:
+          type: string
+        ima_year:
+          type: string
+        discovery_year:
+          type: string
+        ima_status:
+          type: array
+          items:
+            type: String
+        ima_notes:
+          type: array
+          items:
+            type: String
+        type_specimen_store:
+          type: string
+        mindat_longid:
+          type: string
+        mindat_guid:
+          type: string
+          readOnly: true
+        type_localities:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        description_short:
+          type: string
+          readOnly: true
+        mindat_formula:
+          type: string
+        mindat_formula_note:
+          type: string
+      required:
+      - description_short
+      - discovery_year
+      - id
+      - ima_formula
+      - ima_notes
+      - ima_status
+      - ima_symbol
+      - ima_year
+      - mindat_formula
+      - mindat_formula_note
+      - mindat_guid
+      - mindat_longid
+      - type_localities
+      - type_specimen_store
+    LocGeoregion:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureEnum'
+        id:
+          type: integer
+        geometry:
+          oneOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - Point
+              coordinates:
+                type: array
+                items:
+                  type: number
+                  format: float
+                example:
+                - 12.9721
+                - 77.5933
+                minItems: 2
+                maxItems: 3
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - LineString
+              coordinates:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  example:
+                  - 12.9721
+                  - 77.5933
+                  minItems: 2
+                  maxItems: 3
+                example:
+                - - 22.4707
+                  - 70.0577
+                - - 12.9721
+                  - 77.5933
+                minItems: 2
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - Polygon
+              coordinates:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+                    example:
+                    - 12.9721
+                    - 77.5933
+                    minItems: 2
+                    maxItems: 3
+                  example:
+                  - - 22.4707
+                    - 70.0577
+                  - - 12.9721
+                    - 77.5933
+                  minItems: 4
+                example:
+                - - - 0.0
+                    - 0.0
+                  - - 0.0
+                    - 50.0
+                  - - 50.0
+                    - 50.0
+                  - - 50.0
+                    - 0.0
+                  - - 0.0
+                    - 0.0
+        properties:
+          type: object
+          properties:
+            lgr_revtxtd:
+              type: string
+              maxLength: 1024
+            lgr_updttime:
+              type: string
+              format: date-time
+            lgr_non_hierarchical:
+              type: integer
+              maximum: 2147483647
+              minimum: -2147483648
+    LocGeoregionList:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/GisFeatureCollectionEnum'
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocGeoregion'
+    Locality:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        longid:
+          type: string
+        guid:
+          type: string
+          readOnly: true
+        txt:
+          type: string
+          nullable: true
+          maxLength: 1024
+        revtxtd:
+          type: string
+          maxLength: 1024
+        description_short:
+          type: string
+          readOnly: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        langtxt:
+          type: string
+          maxLength: 1024
+        dateadd:
+          type: string
+          format: date-time
+          nullable: true
+        datemodify:
+          type: string
+          format: date-time
+          nullable: true
+        elements:
+          type: string
+          maxLength: 255
+        country:
+          type: string
+          maxLength: 255
+        refs:
+          type: string
+          nullable: true
+        coordsystem:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        parent:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        links:
+          type: string
+        area:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        non_hierarchical:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        age:
+          type: integer
+          nullable: true
+        meteorite_type:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        company:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        company2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        loc_status:
+          type: integer
+          nullable: true
+        loc_group:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        status_year:
+          type: string
+        company_year:
+          type: string
+        discovered_before:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        discovery_year:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        discovery_year_type:
+          type: string
+          maxLength: 25
+        level:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        locsinclude:
+          type: string
+        locsexclude:
+          type: string
+        wikipedia:
+          type: string
+          maxLength: 2000
+        osmid:
+          type: string
+          maxLength: 60
+        geonames:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - area
+      - company
+      - company2
+      - company_year
+      - coordsystem
+      - country
+      - description_short
+      - discovered_before
+      - discovery_year
+      - elements
+      - geonames
+      - guid
+      - id
+      - langtxt
+      - latitude
+      - level
+      - links
+      - loc_group
+      - locsexclude
+      - locsinclude
+      - longid
+      - longitude
+      - meteorite_type
+      - non_hierarchical
+      - osmid
+      - parent
+      - revtxtd
+      - status_year
+      - wikipedia
+    Locstatus:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ls_id:
+          type: integer
+          readOnly: true
+        ls_text:
+          type: string
+          maxLength: 255
+        ls_historical:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ls_wide:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - ls_historical
+      - ls_id
+      - ls_text
+      - ls_wide
+    Loctypes:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        lt_id:
+          type: integer
+          readOnly: true
+        lt_text:
+          type: string
+          maxLength: 255
+        lt_parent:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        lt_sortorder:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        lt_erratic:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        lt_area:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        lt_underground:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - lt_area
+      - lt_erratic
+      - lt_id
+      - lt_parent
+      - lt_sortorder
+      - lt_text
+      - lt_underground
+    LustretypeEnum:
+      enum:
+      - Adamantine
+      - Sub-Adamantine
+      - Vitreous
+      - Sub-Vitreous
+      - Resinous
+      - Waxy
+      - Greasy
+      - Silky
+      - Pearly
+      - Metallic
+      - Sub-Metallic
+      - Dull
+      - Earthy
+      type: string
+    MagnetismEnum:
+      enum:
+      - Non-Magnetic
+      - Diamagnetic
+      - Paramagnetic
+      - Ferromagnetic
+      - Antiferromagnetic
+      - Ferrimagnetic
+      type: string
+    MineralList:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: ID on mindat
+        longid:
+          type: string
+        guid:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          description: Name
+          maxLength: 255
+        updttime:
+          type: string
+          format: date-time
+          nullable: true
+        mindat_formula:
+          type: string
+        mindat_formula_note:
+          type: string
+        ima_formula:
+          type: string
+        ima_status:
+          type: array
+          items:
+            type: String
+          description: 'Ima status. Multiple choice from: </br> <pre style=''white-space:
+            pre-wrap;''>APPROVED - <b>approved</b> </br>DISCREDITED - <b>discredited</b>
+            </br>PENDING_PUBLICATION - <b>pending publication</b> </br>GRANDFATHERED
+            - <b>grandfathered</b> </br>QUESTIONABLE - <b>questionable</b> </br></pre>'
+        ima_notes:
+          type: array
+          items:
+            type: String
+          description: 'Ima notes. Multiple choice from: </br> <pre style=''white-space:
+            pre-wrap;''>REJECTED - <b>rejected</b> </br>PENDING_APPROVAL - <b>pending
+            approval</b> </br>GROUP - <b>group</b> </br>REDEFINED - <b>redefined</b>
+            </br>RENAMED - <b>renamed</b> </br>INTERMEDIATE - <b>intermediate</b>
+            </br>PUBLISHED_WITHOUT_APPROVAL - <b>published without approval</b> </br>UNNAMED_VALID
+            - <b>unnamed valid</b> </br>UNNAMED_INVALID - <b>unnamed invalid</b> </br>NAMED_AMPHIBOLE
+            - <b>named amphibole</b> </br></pre>'
+        varietyof:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: Variety of (geomaterial id, relation with other mineral)
+        synid:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Synonym of (geomaterial id, relation with other mineral)
+        polytypeof:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: Polytype of
+        groupid:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Member of (geomaterial id of a group, relation to other mineral
+            record)
+        entrytype:
+          allOf:
+          - $ref: '#/components/schemas/EntrytypeEnum'
+          description: 'Entry type. Single choice from: </br> <pre style=''white-space:
+            pre-wrap;''>0 - <b>mineral</b> </br>1 - <b>synonym</b> </br>2 - <b>variety</b>
+            </br>3 - <b>mixture</b> </br>4 - <b>series</b> </br>5 - <b>grouplist</b>
+            </br>6 - <b>polytype</b> </br>7 - <b>rock</b> </br>8 - <b>commodity</b>
+            </br></pre>'
+        entrytype_text:
+          type: string
+        description_short:
+          type: string
+          readOnly: true
+          description: Description, cut to 255 symbols
+        impurities:
+          type: string
+          nullable: true
+          description: Common Impurities
+          maxLength: 255
+        elements:
+          type: array
+          items:
+            type: String
+          description: Elements listed
+        sigelements:
+          type: array
+          items:
+            type: String
+          description: Significant elements (only elements that are dominant in structural
+            position).
+        tlform:
+          type: string
+          description: General Appearance
+          maxLength: 255
+        cim:
+          type: string
+          nullable: true
+          description: HEY index
+          maxLength: 40
+        occurrence:
+          type: string
+          nullable: true
+          description: Type locality occurrence
+        otheroccurrence:
+          type: string
+          nullable: true
+          description: General types of occurrences
+        industrial:
+          type: string
+          description: Industrial uses
+          maxLength: 255
+        discovery_year:
+          type: string
+        diapheny:
+          nullable: true
+          description: 'Transparency:'
+          oneOf:
+          - $ref: '#/components/schemas/DiaphenyEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        cleavage:
+          type: string
+          nullable: true
+          description: Cleavage (free text description)
+          maxLength: 255
+        parting:
+          type: string
+          description: Parting
+          maxLength: 255
+        tenacity:
+          nullable: true
+          description: Tenacity
+          oneOf:
+          - $ref: '#/components/schemas/TenacityEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        colour:
+          type: string
+          nullable: true
+          description: Colour (free text)
+          maxLength: 255
+        csmetamict:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        opticalextinction:
+          type: string
+          nullable: true
+          description: Direction of optical extinction
+          maxLength: 255
+        hmin:
+          type: number
+          format: double
+          description: Hardness (Mohs) min
+        hardtype:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        hmax:
+          type: number
+          format: double
+          description: Hardness (Mohs) max. If Mohs hardness is a single value, not
+            a range, this field = 0
+        vhnmin:
+          type: string
+          description: Hardness (Vickers) min
+          maxLength: 32
+        vhnmax:
+          type: string
+          description: Hardness (Vickers) max
+          maxLength: 32
+        vhnerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Hardness (Vickers) error
+        vhng:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Hardness (Vickers), weight used in test, kg/mm^2
+        vhns:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Hardness (Vickers) test time, seconds
+        luminescence:
+          type: string
+          nullable: true
+          description: Luminescence
+          maxLength: 255
+        lustre:
+          type: string
+          nullable: true
+          description: Lustre, free text description
+          maxLength: 255
+        lustretype:
+          nullable: true
+          description: Lustre, set of fixed value types
+          oneOf:
+          - $ref: '#/components/schemas/LustretypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        aboutname:
+          type: string
+          nullable: true
+          description: Reference about mineral name
+        other:
+          type: string
+          nullable: true
+          description: 'Other information: free text'
+        streak:
+          type: string
+          nullable: true
+          description: Colour of streak
+          maxLength: 255
+        csystem:
+          nullable: true
+          description: Crystal system
+          oneOf:
+          - $ref: '#/components/schemas/CsystemEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        cclass:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Point group id
+        spacegroup:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Space group id
+        a:
+          type: string
+          description: 'Ratio: "a" - x axis spacing'
+          maxLength: 32
+        b:
+          type: string
+          description: 'Ratio: "b" - y axis spacing'
+          maxLength: 32
+        c:
+          type: string
+          description: 'Ratio: "c" - z axis spacing'
+          maxLength: 32
+        alpha:
+          type: string
+          maxLength: 32
+        beta:
+          type: string
+          maxLength: 32
+        gamma:
+          type: string
+          maxLength: 32
+        aerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        berror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        cerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        alphaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        betaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        gammaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        va3:
+          type: number
+          format: double
+          nullable: true
+        z:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        dmeas:
+          type: string
+          description: Minimum (or only, or average) measured density (specific gravity).
+          maxLength: 32
+        dmeas2:
+          type: string
+          description: Maximum measured density (specific gravity). If density is
+            a single value, this field = 0
+          maxLength: 32
+        dcalc:
+          type: string
+          description: Calculated density (specific gravity) from X-ray data
+          maxLength: 32
+        dmeaserror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: the +/- of the measured density
+        dcalcerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: the +/- of the calculated density
+        cleavagetype:
+          nullable: true
+          description: Cleavage type
+          oneOf:
+          - $ref: '#/components/schemas/CleavagetypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        fracturetype:
+          nullable: true
+          description: Fracture type
+          oneOf:
+          - $ref: '#/components/schemas/FracturetypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        morphology:
+          type: string
+          nullable: true
+          description: Morphology (free text)
+        twinning:
+          type: string
+          nullable: true
+          description: Twinning (free text)
+        epitaxidescription:
+          type: string
+          nullable: true
+          description: Epitaxy comments (free text)
+        opticaltype:
+          nullable: true
+          description: Optical Type
+          oneOf:
+          - $ref: '#/components/schemas/OpticaltypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        opticalsign:
+          nullable: true
+          description: Optical Sign
+          oneOf:
+          - $ref: '#/components/schemas/OpticalsignEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        opticalalpha:
+          type: string
+          description: 'RI values: alpha'
+          maxLength: 32
+        opticalbeta:
+          type: string
+          description: 'RI values: beta'
+          maxLength: 32
+        opticalgamma:
+          type: string
+          description: 'RI values: gamma'
+          maxLength: 32
+        opticalomega:
+          type: string
+          description: 'RI values: omega'
+          maxLength: 32
+        opticalepsilon:
+          type: string
+          description: 'RI values: epsilon'
+          maxLength: 32
+        opticalalpha2:
+          type: string
+          description: 'RI values: alpha2'
+          maxLength: 32
+        opticalbeta2:
+          type: string
+          description: 'RI values: beta2'
+          maxLength: 32
+        opticalgamma2:
+          type: string
+          description: 'RI values: gamma2'
+          maxLength: 32
+        opticalepsilon2:
+          type: string
+          description: 'RI values: epsilon2'
+          maxLength: 32
+        opticalomega2:
+          type: string
+          description: 'RI values: omega2'
+          maxLength: 32
+        opticaln:
+          type: string
+          description: 'RI values: n'
+          maxLength: 32
+        opticaln2:
+          type: string
+          description: 'RI values: n2'
+          maxLength: 32
+        optical2vcalc:
+          type: string
+          description: 2V calculated
+          maxLength: 32
+        optical2vmeasured:
+          type: string
+          description: 2V measured
+          maxLength: 32
+        optical2vcalc2:
+          type: string
+          description: 2V calculated 2
+          maxLength: 32
+        optical2vmeasured2:
+          type: string
+          description: 2V measured 2
+          maxLength: 32
+        opticalalphaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: alpha error'
+        opticalbetaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: beta error'
+        opticalgammaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: gamma error'
+        opticalomegaerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: omega error'
+        opticalepsilonerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: epsilon error'
+        opticalnerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 'RI values: n error'
+        optical2vcalcerror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 2V calculated error
+        optical2vmeasurederror:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: 2V measured error
+        opticaldispersion:
+          type: string
+          nullable: true
+          description: Dispertion (free text)
+          maxLength: 255
+        opticalpleochroism:
+          nullable: true
+          description: Pleochroism
+          oneOf:
+          - $ref: '#/components/schemas/OpticalpleochroismEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        opticalpleochorismdesc:
+          type: string
+          nullable: true
+          description: Pleochroism comments. E.g. colors (free text)
+          maxLength: 255
+        opticalbirefringence:
+          type: string
+          nullable: true
+          description: birefringence comments
+        opticalcomments:
+          type: string
+          nullable: true
+          description: general optical comments
+          maxLength: 255
+        opticalcolour:
+          type: string
+          nullable: true
+          description: Colour in reflected light
+          maxLength: 255
+        opticalinternal:
+          type: string
+          nullable: true
+          description: Internal reflections
+          maxLength: 255
+        opticaltropic:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/OpticaltropicEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        opticalanisotropism:
+          type: string
+          nullable: true
+          description: Anisotropism text description
+          maxLength: 255
+        opticalbireflectance:
+          type: string
+          nullable: true
+          description: Bireflectance description
+          maxLength: 255
+        opticalr:
+          type: string
+          nullable: true
+          description: Optical reflectivity
+        uv:
+          type: string
+          nullable: true
+          description: Fluorescence in UV light (free text)
+          maxLength: 255
+        ir:
+          type: string
+          description: IR Spectrum (free text)
+          maxLength: 255
+        magnetism:
+          nullable: true
+          description: Magnetism
+          oneOf:
+          - $ref: '#/components/schemas/MagnetismEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        type_specimen_store:
+          type: string
+        commenthard:
+          type: string
+          description: Hardness Comment
+        strunz10ed1:
+          type: string
+          nullable: true
+          description: Mindat version of Strunz classification, part 1/4
+          maxLength: 5
+        strunz10ed2:
+          type: string
+          nullable: true
+          description: Mindat version of Strunz classification, part 2/4
+          maxLength: 5
+        strunz10ed3:
+          type: string
+          nullable: true
+          description: Mindat version of Strunz classification, part 3/4
+          maxLength: 5
+        strunz10ed4:
+          type: string
+          nullable: true
+          description: Mindat version of Strunz classification, part 4/4
+          maxLength: 5
+        dana8ed1:
+          type: string
+          maxLength: 5
+        dana8ed2:
+          type: string
+          maxLength: 5
+        dana8ed3:
+          type: string
+          maxLength: 5
+        dana8ed4:
+          type: string
+          maxLength: 5
+        thermalbehaviour:
+          type: string
+          nullable: true
+          description: Thermal Behaviour
+          maxLength: 255
+        commentluster:
+          type: string
+          description: Luster comment
+        commentbreak:
+          type: string
+          description: Break comment
+        commentdense:
+          type: string
+          description: Density comment
+        commentcrystal:
+          type: string
+          description: Crystallography comments
+        commentcolor:
+          type: string
+          description: Color comment
+        electrical:
+          type: string
+          description: Electrical properties (free text)
+        tranglide:
+          type: string
+          description: Translation gliding (free text)
+        nolocadd:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Flag that prevents adding this mineral (or other) to locality
+        specdispm:
+          type: string
+          nullable: true
+          description: Special Storage / Display Requirements
+        spacegroupset:
+          type: string
+          description: 'Space Group: Setting'
+          maxLength: 50
+        approval_year:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          description: Approval Year
+        publication_year:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          description: Publication Year
+        ima_history:
+          type: string
+        rock_parent:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rock_parent2:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rock_root:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rock_bgs_code:
+          type: string
+          maxLength: 32
+        meteoritical_code:
+          type: string
+          maxLength: 64
+        key_elements:
+          type: array
+          items:
+            type: String
+          description: This represents elements important for mining, this list is
+            formed as "sigelements"                     excluding ("H", "O", "Si",
+            "Al", "Fe", "Ca", "Na", "K", "P", "C", "Mn", "F", "Mg", "S").
+        shortcode_ima:
+          type: string
+          description: IMA mineral shortcode (3 letters)
+          maxLength: 12
+        rimin:
+          type: number
+          format: double
+          nullable: true
+          description: 'Refractive index: minimal'
+        rimax:
+          type: number
+          format: double
+          nullable: true
+          description: 'Refractive index: maximal'
+        weighting:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: '? if use this, need to briefly describe algorithm.'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relations'
+          readOnly: true
+          description: Relations to other geomaterials
+        minstats:
+          allOf:
+          - $ref: '#/components/schemas/Minstats'
+          description: Mindat statistics for geomaterial
+        locality:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: List of localities where the geomaterial was found
+        type_localities:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: Type localities
+      required:
+      - a
+      - alpha
+      - b
+      - beta
+      - c
+      - commentbreak
+      - commentcolor
+      - commentcrystal
+      - commentdense
+      - commenthard
+      - commentluster
+      - dana8ed1
+      - dana8ed2
+      - dana8ed3
+      - dana8ed4
+      - dcalc
+      - description_short
+      - discovery_year
+      - dmeas
+      - dmeas2
+      - electrical
+      - elements
+      - entrytype
+      - entrytype_text
+      - gamma
+      - guid
+      - id
+      - ima_formula
+      - ima_history
+      - ima_notes
+      - ima_status
+      - industrial
+      - ir
+      - key_elements
+      - locality
+      - longid
+      - meteoritical_code
+      - mindat_formula
+      - mindat_formula_note
+      - minstats
+      - optical2vcalc
+      - optical2vcalc2
+      - optical2vmeasured
+      - optical2vmeasured2
+      - opticalalpha
+      - opticalalpha2
+      - opticalbeta
+      - opticalbeta2
+      - opticalepsilon
+      - opticalepsilon2
+      - opticalgamma
+      - opticalgamma2
+      - opticaln
+      - opticaln2
+      - opticalomega
+      - opticalomega2
+      - parting
+      - relations
+      - rock_bgs_code
+      - shortcode_ima
+      - sigelements
+      - spacegroupset
+      - tlform
+      - tranglide
+      - type_localities
+      - type_specimen_store
+      - vhnmax
+      - vhnmin
+    Minstats:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ms_photos:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Number of photos
+        ms_locentries:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Number of localities where the geomaterial is reported
+        ms_photovotes:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Number of votes for photos
+      required:
+      - ms_locentries
+      - ms_photos
+      - ms_photovotes
+    NullEnum:
+      enum:
+      - null
+    OpticalpleochroismEnum:
+      enum:
+      - Non-pleochroic
+      - Not Visible
+      - Weak
+      - Visible
+      - Strong
+      type: string
+    OpticalsignEnum:
+      enum:
+      - +
+      - '-'
+      - +/-
+      type: string
+    OpticaltropicEnum:
+      enum:
+      - Isotropic
+      - Anisotropic
+      type: string
+    OpticaltypeEnum:
+      enum:
+      - Isotropic
+      - Uniaxial
+      - Biaxial
+      type: string
+    PaginatedAgeList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Age'
+    PaginatedCountriesList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Countries'
+    PaginatedIMAMineralListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IMAMineralList'
+    PaginatedLocGeoregionList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          $ref: '#/components/schemas/LocGeoregionList'
+    PaginatedLocalityList:
+      type: object
+      properties:
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locality'
+    PaginatedLocstatusList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locstatus'
+    PaginatedLoctypesList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Loctypes'
+    PaginatedMineralListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MineralList'
+    PasscodeResponse:
+      type: object
+      properties:
+        passcode:
+          type: string
+      required:
+      - passcode
+    Relations:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        mineral_id:
+          type: integer
+        relation_type:
+          type: integer
+          description: 'Single choice from: </br> <pre style=''white-space: pre-wrap;''>1
+            - <b>Synonym</b> </br>2 - <b>Mixture</b> </br>3 - <b>??</b> </br>4 - <b>Minerals
+            structurally related to group</b> </br>5 - <b>Associated Minerals at Type
+            or First recorded Locality</b> </br>6 - <b>Epitaxial Relationships of</b>
+            </br>7 - <b>Polymorph of</b> </br>8 - <b>Isostructural with</b> </br>9
+            - <b>Minerals chemically related to group</b> </br>10 - <b>Common Associates</b>
+            </br>11 - <b>Essential minerals</b> </br>12 - <b>Common ore minerals</b>
+            </br>13 - <b>Accessory minerals</b> </br></pre>'
+        relation_type_text:
+          type: string
+          description: Relation type text
+      required:
+      - mineral_id
+      - relation_type
+      - relation_type_text
+    TenacityEnum:
+      enum:
+      - brittle
+      - very brittle
+      - sectile
+      - waxy
+      - flexible
+      - elastic
+      - fragile
+      - malleable
+      type: string
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
