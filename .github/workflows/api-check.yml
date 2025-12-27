@@ -1,0 +1,282 @@
+name: API Change Detection
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check-api-changes:
+    name: Check for Mindat API Changes
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch current OpenAPI schema
+        id: fetch-schema
+        run: |
+          # Try to fetch the OpenAPI schema from Mindat
+          # The API may require authentication, so we try multiple approaches
+
+          # First, try the schema endpoint
+          if curl -sSf "https://api.mindat.org/schema/" -o current_schema.json 2>/dev/null; then
+            echo "Fetched schema from /schema/ endpoint"
+            echo "schema_fetched=true" >> $GITHUB_OUTPUT
+          elif curl -sSf "https://api.mindat.org/schema.json" -o current_schema.json 2>/dev/null; then
+            echo "Fetched schema from /schema.json endpoint"
+            echo "schema_fetched=true" >> $GITHUB_OUTPUT
+          else
+            # Try fetching known endpoints to detect changes
+            echo "Direct schema fetch failed, checking endpoint responses..."
+
+            # Create a simple schema from endpoint discovery
+            mkdir -p api_responses
+
+            # Check minerals_ima (public endpoint) for response structure
+            curl -sSf "https://api.mindat.org/minerals_ima/?page_size=1" \
+              -o api_responses/minerals_ima.json 2>/dev/null || true
+
+            # Check countries (may require auth)
+            curl -sSf "https://api.mindat.org/countries/" \
+              -o api_responses/countries.json 2>/dev/null || true
+
+            # Check geomaterials structure (may require auth)
+            curl -sSf "https://api.mindat.org/geomaterials/?page_size=1" \
+              -o api_responses/geomaterials.json 2>/dev/null || true
+
+            if [ -f api_responses/minerals_ima.json ]; then
+              echo "schema_fetched=partial" >> $GITHUB_OUTPUT
+            else
+              echo "schema_fetched=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Compare with stored schema
+        id: compare
+        if: steps.fetch-schema.outputs.schema_fetched != 'false'
+        run: |
+          CHANGES_DETECTED=false
+          CHANGES_SUMMARY=""
+
+          # Compare OpenAPI YAML if we have a full schema
+          if [ -f current_schema.json ]; then
+            # Convert YAML to JSON for comparison if needed
+            if command -v python3 &> /dev/null; then
+              python3 << 'EOF'
+          import json
+          import yaml
+          import sys
+
+          # Load current schema
+          try:
+              with open('current_schema.json', 'r') as f:
+                  current = json.load(f)
+          except:
+              print("Could not parse current schema")
+              sys.exit(0)
+
+          # Load stored schema (YAML)
+          try:
+              with open('Mindat API.yaml', 'r') as f:
+                  stored = yaml.safe_load(f)
+          except:
+              print("Could not parse stored schema")
+              sys.exit(0)
+
+          # Compare paths (endpoints)
+          current_paths = set(current.get('paths', {}).keys())
+          stored_paths = set(stored.get('paths', {}).keys())
+
+          new_endpoints = current_paths - stored_paths
+          removed_endpoints = stored_paths - current_paths
+
+          changes = []
+
+          if new_endpoints:
+              changes.append(f"New endpoints: {', '.join(sorted(new_endpoints))}")
+
+          if removed_endpoints:
+              changes.append(f"Removed endpoints: {', '.join(sorted(removed_endpoints))}")
+
+          # Compare schemas/components
+          current_schemas = set(current.get('components', {}).get('schemas', {}).keys())
+          stored_schemas = set(stored.get('components', {}).get('schemas', {}).keys())
+
+          new_schemas = current_schemas - stored_schemas
+          removed_schemas = stored_schemas - current_schemas
+
+          if new_schemas:
+              changes.append(f"New schemas: {', '.join(sorted(new_schemas))}")
+
+          if removed_schemas:
+              changes.append(f"Removed schemas: {', '.join(sorted(removed_schemas))}")
+
+          if changes:
+              print("CHANGES_DETECTED=true")
+              with open('changes.txt', 'w') as f:
+                  f.write('\n'.join(changes))
+          else:
+              print("CHANGES_DETECTED=false")
+          EOF
+            fi
+          fi
+
+          # Check for partial schema comparison
+          if [ -d api_responses ]; then
+            # Check if IMA minerals response structure has changed
+            if [ -f api_responses/minerals_ima.json ]; then
+              # Extract field names from response
+              python3 << 'EOF' || true
+          import json
+
+          try:
+              with open('api_responses/minerals_ima.json', 'r') as f:
+                  data = json.load(f)
+
+              if 'results' in data and len(data['results']) > 0:
+                  fields = set(data['results'][0].keys())
+
+                  # Known fields from our implementation
+                  expected_fields = {
+                      'id', 'name', 'ima_formula', 'ima_symbol', 'ima_year',
+                      'discovery_year', 'ima_status', 'ima_notes', 'type_specimen_store',
+                      'mindat_longid', 'mindat_guid', 'type_localities',
+                      'description_short', 'mindat_formula', 'mindat_formula_note'
+                  }
+
+                  new_fields = fields - expected_fields
+                  missing_fields = expected_fields - fields
+
+                  if new_fields or missing_fields:
+                      with open('changes.txt', 'a') as f:
+                          if new_fields:
+                              f.write(f"\nNew fields in minerals_ima: {', '.join(sorted(new_fields))}")
+                          if missing_fields:
+                              f.write(f"\nMissing fields in minerals_ima: {', '.join(sorted(missing_fields))}")
+                      print("CHANGES_DETECTED=true")
+          except Exception as e:
+              print(f"Error checking minerals_ima: {e}")
+          EOF
+            fi
+          fi
+
+          if [ -f changes.txt ]; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "changes_summary<<EOF" >> $GITHUB_OUTPUT
+            cat changes.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create issue for API changes
+        if: steps.compare.outputs.changes_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changes = `${{ steps.compare.outputs.changes_summary }}`;
+            const issueTitle = '🔔 Mindat API Changes Detected';
+
+            // Check if there's already an open issue for API changes
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'api-change',
+              per_page: 100
+            });
+
+            // Find exact title match to avoid false positives
+            const existingIssue = issues.find(issue => issue.title === issueTitle);
+
+            if (existingIssue) {
+              console.log(`Found existing issue #${existingIssue.number}, adding comment`);
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `## Additional API changes detected\n\n\`\`\`\n${changes}\n\`\`\`\n\n*Detected on ${new Date().toISOString()}*`
+              });
+            } else {
+              console.log('No existing issue found, creating new one');
+
+              // Ensure labels exist before creating issue
+              for (const label of ['api-change', 'needs-review']) {
+                try {
+                  await github.rest.issues.getLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: label
+                  });
+                } catch (e) {
+                  if (e.status === 404) {
+                    await github.rest.issues.createLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label,
+                      color: label === 'api-change' ? 'fbca04' : 'd93f0b',
+                      description: label === 'api-change'
+                        ? 'Upstream API has changed'
+                        : 'Requires human review'
+                    });
+                  }
+                }
+              }
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: `## Mindat API Changes Detected
+
+The nightly API check has detected changes in the upstream Mindat API that may require updates to this crate.
+
+### Detected Changes
+
+\`\`\`
+${changes}
+\`\`\`
+
+### Recommended Actions
+
+1. Review the changes above
+2. Update the \`Mindat API.yaml\` schema file if needed
+3. Update the Rust models in \`src/models/\` to match any schema changes
+4. Update tests as needed
+5. Release a new version if breaking changes are involved
+
+### Links
+
+- [Mindat API Documentation](https://api.mindat.org/schema/redoc/)
+- [OpenMindat R Package](https://github.com/quexiang/OpenMindat) (reference implementation)
+
+---
+*This issue was automatically created by the API Change Detection workflow.*`,
+                labels: ['api-change', 'needs-review']
+              });
+            }
+
+      - name: Summary
+        run: |
+          echo "## API Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.compare.outputs.changes_detected }}" == "true" ]; then
+            echo "⚠️ **Changes Detected**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat changes.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **No changes detected**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The Mindat API appears to be unchanged since the last check." >> $GITHUB_STEP_SUMMARY
+          fi
