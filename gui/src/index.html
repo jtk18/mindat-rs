@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindat Explorer</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #16a34a;
+            --error-color: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+            color: white;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .config-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .config-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--text-color);
+        }
+
+        .config-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        button.primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.secondary {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        button.secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.connected {
+            background-color: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .status-indicator.disconnected {
+            background-color: #fee2e2;
+            color: var(--error-color);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-indicator.connected .status-dot {
+            background-color: var(--success-color);
+        }
+
+        .status-indicator.disconnected .status-dot {
+            background-color: var(--error-color);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .endpoint-list {
+            list-style: none;
+        }
+
+        .endpoint-list li {
+            margin-bottom: 4px;
+        }
+
+        .endpoint-list button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 14px;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 400;
+            color: var(--text-color);
+        }
+
+        .endpoint-list button:hover {
+            background-color: var(--bg-color);
+        }
+
+        .endpoint-list button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .endpoint-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .endpoint-badge.public {
+            background-color: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .endpoint-badge.auth {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .content-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+        }
+
+        .panel-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .form-row .input-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .results-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .results-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-table th {
+            background-color: var(--bg-color);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: var(--bg-color);
+        }
+
+        .json-output {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            color: var(--error-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            margin-left: 12px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-color);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .mineral-card {
+            background: var(--bg-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .mineral-card h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .mineral-card .formula {
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .mineral-card .meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mindat Explorer</h1>
+            <p>Test and explore the Mindat API for minerals, localities, and more <span style="opacity: 0.7; font-size: 0.8em;">(v2024.12.27b)</span></p>
+        </header>
+
+        <section class="config-section">
+            <h2>API Configuration</h2>
+            <div class="config-row">
+                <div class="input-group">
+                    <label for="api-token">API Token (from mindat.org)</label>
+                    <input type="text" id="api-token" placeholder="Enter your API token (leave empty for anonymous)">
+                </div>
+                <button class="primary" id="connect-btn">Connect</button>
+                <button class="secondary" id="disconnect-btn">Disconnect</button>
+                <div class="status-indicator disconnected" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Not Connected</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <h3>Endpoints</h3>
+                <ul class="endpoint-list">
+                    <li><button data-endpoint="ima-minerals" class="active">IMA Minerals <span class="endpoint-badge public">Public</span></button></li>
+                    <li><button data-endpoint="minerals">Minerals <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="mineral-detail">Mineral Details <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="elements">By Elements <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="localities">Localities <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="localities-gps">Localities by GPS <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="localities-element">Localities by Element <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="dana8">Dana-8 Groups <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="strunz10">Strunz-10 Classes <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="photocount">Photo Count <span class="endpoint-badge auth">Auth</span></button></li>
+                </ul>
+            </aside>
+
+            <main class="content-panel">
+                <!-- IMA Minerals Panel -->
+                <div id="panel-ima-minerals" class="panel">
+                    <div class="panel-header">
+                        <h2>IMA Minerals (Public Endpoint)</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="ima-search">Search</label>
+                                <input type="text" id="ima-search" placeholder="Search for minerals...">
+                            </div>
+                            <div class="input-group" style="max-width: 120px;">
+                                <label for="ima-page">Page</label>
+                                <input type="number" id="ima-page" value="1" min="1">
+                            </div>
+                            <button class="primary" id="ima-search-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="ima-results"></div>
+                    </div>
+                </div>
+
+                <!-- Minerals Panel -->
+                <div id="panel-minerals" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Minerals Search</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="mineral-name">Name (supports wildcards: * and _)</label>
+                                <input type="text" id="mineral-name" placeholder="e.g., quartz, *ite, dia*">
+                            </div>
+                            <div class="input-group" style="max-width: 120px;">
+                                <label for="mineral-page">Page</label>
+                                <input type="number" id="mineral-page" value="1" min="1">
+                            </div>
+                            <button class="primary" id="mineral-search-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="mineral-results"></div>
+                    </div>
+                </div>
+
+                <!-- Mineral Detail Panel -->
+                <div id="panel-mineral-detail" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Mineral Details</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group" style="max-width: 200px;">
+                                <label for="mineral-id">Mineral ID</label>
+                                <input type="number" id="mineral-id" placeholder="e.g., 3337">
+                            </div>
+                            <button class="primary" id="mineral-detail-btn">Get Details</button>
+                        </div>
+                        <div class="results-container" id="mineral-detail-results"></div>
+                    </div>
+                </div>
+
+                <!-- Elements Panel -->
+                <div id="panel-elements" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Search by Elements</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="include-elements">Include Elements (comma-separated)</label>
+                                <input type="text" id="include-elements" placeholder="e.g., Cu,S">
+                            </div>
+                            <div class="input-group">
+                                <label for="exclude-elements">Exclude Elements (optional)</label>
+                                <input type="text" id="exclude-elements" placeholder="e.g., O,Fe">
+                            </div>
+                            <div class="input-group" style="max-width: 100px;">
+                                <label for="elements-page">Page</label>
+                                <input type="number" id="elements-page" value="1" min="1">
+                            </div>
+                            <button class="primary" id="elements-search-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="elements-results"></div>
+                    </div>
+                </div>
+
+                <!-- Countries Panel -->
+                <div id="panel-countries" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Countries</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group" style="max-width: 120px;">
+                                <label for="countries-page">Page</label>
+                                <input type="number" id="countries-page" value="1" min="1">
+                            </div>
+                            <button class="primary" id="countries-btn">List Countries</button>
+                        </div>
+                        <div class="results-container" id="countries-results"></div>
+                    </div>
+                </div>
+
+                <!-- Localities Panel -->
+                <div id="panel-localities" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Localities</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="locality-country">Country</label>
+                                <input type="text" id="locality-country" placeholder="e.g., Brazil">
+                            </div>
+                            <div class="input-group">
+                                <label for="locality-name">Name Contains</label>
+                                <input type="text" id="locality-name" placeholder="e.g., Mine">
+                            </div>
+                            <button class="primary" id="localities-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="localities-results"></div>
+                    </div>
+                </div>
+
+                <!-- Localities by GPS Panel -->
+                <div id="panel-localities-gps" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Search Localities by GPS Coordinates</h2>
+                    </div>
+                    <div class="panel-body">
+                        <p style="margin-bottom: 16px; color: var(--text-muted);">Find mineral localities near a specific location. Enter coordinates directly or look up an address. A country or name filter is required.</p>
+
+                        <div class="form-row" style="margin-bottom: 12px;">
+                            <div class="input-group">
+                                <label for="gps-address">Address Lookup</label>
+                                <input type="text" id="gps-address" placeholder="e.g., Denver, Colorado or 1600 Pennsylvania Ave, Washington DC">
+                            </div>
+                            <button class="secondary" id="gps-lookup-btn">Lookup</button>
+                        </div>
+                        <div id="gps-lookup-status" style="margin-bottom: 12px; font-size: 0.875rem; color: var(--text-muted);"></div>
+
+                        <div class="form-row">
+                            <div class="input-group" style="max-width: 150px;">
+                                <label for="gps-lat">Latitude</label>
+                                <input type="number" id="gps-lat" placeholder="e.g., 39.7392" step="0.0001">
+                            </div>
+                            <div class="input-group" style="max-width: 150px;">
+                                <label for="gps-lon">Longitude</label>
+                                <input type="number" id="gps-lon" placeholder="e.g., -104.9903" step="0.0001">
+                            </div>
+                            <div class="input-group" style="max-width: 100px;">
+                                <label for="gps-radius">Radius</label>
+                                <input type="number" id="gps-radius" value="50" min="1" max="500">
+                            </div>
+                            <div class="input-group" style="max-width: 80px;">
+                                <label for="gps-unit">Unit</label>
+                                <select id="gps-unit">
+                                    <option value="km">km</option>
+                                    <option value="mi">mi</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="gps-country">Country (required if no name filter)</label>
+                                <input type="text" id="gps-country" placeholder="e.g., United States (auto-filled from address lookup)">
+                            </div>
+                            <div class="input-group">
+                                <label for="gps-name">Name Contains (optional)</label>
+                                <input type="text" id="gps-name" placeholder="e.g., Mine, Quarry">
+                            </div>
+                            <button class="primary" id="localities-gps-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="localities-gps-results"></div>
+                    </div>
+                </div>
+
+                <!-- Localities by Element Panel -->
+                <div id="panel-localities-element" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Find Localities by Element</h2>
+                    </div>
+                    <div class="panel-body">
+                        <p style="margin-bottom: 16px; color: var(--text-muted);">Find mineral localities that contain specific elements, with GPS coordinates.</p>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="loc-element-include">Elements to Include (comma-separated)</label>
+                                <input type="text" id="loc-element-include" placeholder="e.g., Cu, Au">
+                            </div>
+                            <div class="input-group">
+                                <label for="loc-element-exclude">Elements to Exclude (optional)</label>
+                                <input type="text" id="loc-element-exclude" placeholder="e.g., O, Fe">
+                            </div>
+                            <button class="primary" id="localities-element-btn">Search</button>
+                        </div>
+                        <div class="results-container" id="localities-element-results"></div>
+                    </div>
+                </div>
+
+                <!-- Dana-8 Panel -->
+                <div id="panel-dana8" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Dana-8 Classification Groups</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <button class="primary" id="dana8-btn">Load Groups</button>
+                        </div>
+                        <div class="results-container" id="dana8-results"></div>
+                    </div>
+                </div>
+
+                <!-- Strunz-10 Panel -->
+                <div id="panel-strunz10" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Strunz-10 Classification Classes</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <button class="primary" id="strunz10-btn">Load Classes</button>
+                        </div>
+                        <div class="results-container" id="strunz10-results"></div>
+                    </div>
+                </div>
+
+                <!-- Photo Count Panel -->
+                <div id="panel-photocount" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Photo Count Statistics</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-row">
+                            <button class="primary" id="photocount-btn">Get Photo Count</button>
+                        </div>
+                        <div class="results-container" id="photocount-results"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Debug mode detection
+        const DEBUG = true; // Set to false in production
+
+        function debug(...args) {
+            if (DEBUG) {
+                console.log('[Mindat Debug]', ...args);
+            }
+        }
+
+        // Wait for Tauri to be ready
+        let invoke;
+
+        async function initTauri() {
+            debug('Initializing Tauri...');
+            debug('window.__TAURI__:', window.__TAURI__);
+
+            if (window.__TAURI__) {
+                debug('Tauri object keys:', Object.keys(window.__TAURI__));
+                if (window.__TAURI__.core) {
+                    invoke = window.__TAURI__.core.invoke;
+                    debug('Using __TAURI__.core.invoke');
+                } else if (window.__TAURI__.tauri) {
+                    invoke = window.__TAURI__.tauri.invoke;
+                    debug('Using __TAURI__.tauri.invoke');
+                } else if (window.__TAURI__.invoke) {
+                    invoke = window.__TAURI__.invoke;
+                    debug('Using __TAURI__.invoke');
+                }
+            }
+
+            if (!invoke) {
+                console.error('Tauri invoke not found! Available:', window.__TAURI__);
+                alert('Tauri API not available. Check console for details.');
+                return false;
+            }
+
+            debug('invoke function:', invoke);
+            return true;
+        }
+
+        // State
+        let isConnected = false;
+
+        // DOM Elements
+        const apiTokenInput = document.getElementById('api-token');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const endpointButtons = document.querySelectorAll('.endpoint-list button');
+        const panels = document.querySelectorAll('.panel');
+
+        // Helper functions
+        function showLoading(container) {
+            container.innerHTML = '<div class="loading">Loading</div>';
+        }
+
+        function showError(container, message) {
+            // Handle error objects from Tauri
+            let errorMsg = message;
+            if (typeof message === 'object') {
+                errorMsg = message.message || JSON.stringify(message);
+            }
+            container.innerHTML = `<div class="error-message">${escapeHtml(errorMsg)}</div>`;
+        }
+
+        function showJson(container, data) {
+            container.innerHTML = `<div class="json-output">${escapeHtml(JSON.stringify(data, null, 2))}</div>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+
+        // Format chemical formula - preserve <sub> and <sup> tags for proper rendering
+        function formatFormula(formula) {
+            if (!formula) return '-';
+            // Escape HTML first, then restore <sub>, </sub>, <sup>, </sup>
+            let escaped = escapeHtml(formula);
+            // Restore subscript and superscript tags
+            escaped = escaped.replace(/&lt;sub&gt;/gi, '<sub>');
+            escaped = escaped.replace(/&lt;\/sub&gt;/gi, '</sub>');
+            escaped = escaped.replace(/&lt;sup&gt;/gi, '<sup>');
+            escaped = escaped.replace(/&lt;\/sup&gt;/gi, '</sup>');
+            return escaped;
+        }
+
+        // Clean and validate element input (e.g., "Cu, Au, " -> "Cu,Au")
+        function cleanElementInput(input) {
+            if (!input) return null;
+            // Remove invalid characters (only allow letters, commas, spaces)
+            let cleaned = input.replace(/[^a-zA-Z,\s]/g, '');
+            // Split by comma or space, filter empty, rejoin with comma
+            const elements = cleaned.split(/[,\s]+/).filter(e => e.trim().length > 0);
+            return elements.length > 0 ? elements.join(',') : null;
+        }
+
+        function updateStatus(connected) {
+            isConnected = connected;
+            statusIndicator.className = `status-indicator ${connected ? 'connected' : 'disconnected'}`;
+            statusText.textContent = connected ? 'Connected' : 'Not Connected';
+        }
+
+        function showPanel(endpoint) {
+            panels.forEach(p => p.classList.add('hidden'));
+            document.getElementById(`panel-${endpoint}`).classList.remove('hidden');
+            endpointButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-endpoint="${endpoint}"]`).classList.add('active');
+        }
+
+        function renderMinerals(container, data, showFormula = true) {
+            const results = data.results || [];
+            const count = data.count;
+
+            let html = `
+                <div class="results-header">
+                    <h3>Results</h3>
+                    <span class="results-count">${count !== undefined ? count + ' total' : results.length + ' items'}</span>
+                </div>
+            `;
+
+            if (results.length === 0) {
+                html += '<p>No results found.</p>';
+            } else {
+                html += `
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                ${showFormula ? '<th>Formula</th>' : ''}
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                for (const m of results) {
+                    const formula = m.ima_formula || m.mindat_formula || '-';
+                    html += `
+                        <tr>
+                            <td>${m.id}</td>
+                            <td><strong>${escapeHtml(m.name || '-')}</strong></td>
+                            ${showFormula ? `<td class="formula">${formatFormula(formula)}</td>` : ''}
+                            <td>${escapeHtml(m.ima_status || '-')}</td>
+                        </tr>
+                    `;
+                }
+                html += '</tbody></table>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Render minerals with pagination controls
+        function renderMineralsWithPagination(container, data, pageInputId, searchBtnId) {
+            const results = data.results || [];
+            const count = data.count;
+            const currentPage = parseInt(document.getElementById(pageInputId).value) || 1;
+            const pageSize = 20; // Default page size
+            const totalPages = count ? Math.ceil(count / pageSize) : null;
+
+            let html = `
+                <div class="results-header">
+                    <h3>Results</h3>
+                    <span class="results-count">${count !== undefined ? count + ' total' : results.length + ' items'}${totalPages ? ` (Page ${currentPage} of ${totalPages})` : ''}</span>
+                </div>
+            `;
+
+            // Pagination controls
+            if (totalPages && totalPages > 1) {
+                html += `
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; align-items: center;">
+                        <button class="secondary pagination-btn" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''}>← Previous</button>
+                        <span style="color: var(--text-muted);">Page ${currentPage} of ${totalPages}</span>
+                        <button class="secondary pagination-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+                    </div>
+                `;
+            }
+
+            if (results.length === 0) {
+                html += '<p>No results found.</p>';
+            } else {
+                html += `
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Formula</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                for (const m of results) {
+                    const formula = m.ima_formula || m.mindat_formula || '-';
+                    html += `
+                        <tr>
+                            <td>${m.id}</td>
+                            <td><strong>${escapeHtml(m.name || '-')}</strong></td>
+                            <td class="formula">${formatFormula(formula)}</td>
+                            <td>${escapeHtml(m.ima_status || '-')}</td>
+                        </tr>
+                    `;
+                }
+                html += '</tbody></table>';
+            }
+
+            // Bottom pagination for long lists
+            if (totalPages && totalPages > 1 && results.length > 10) {
+                html += `
+                    <div style="display: flex; gap: 8px; margin-top: 16px; align-items: center;">
+                        <button class="secondary pagination-btn" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''}>← Previous</button>
+                        <span style="color: var(--text-muted);">Page ${currentPage} of ${totalPages}</span>
+                        <button class="secondary pagination-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+            // Add click handlers for pagination buttons
+            container.querySelectorAll('.pagination-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const newPage = parseInt(btn.dataset.page);
+                    if (newPage >= 1 && (!totalPages || newPage <= totalPages)) {
+                        document.getElementById(pageInputId).value = newPage;
+                        document.getElementById(searchBtnId).click();
+                    }
+                });
+            });
+        }
+
+        function renderCountries(container, data) {
+            const results = data.results || [];
+            const count = data.count;
+
+            let html = `
+                <div class="results-header">
+                    <h3>Results</h3>
+                    <span class="results-count">${count} total</span>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>ISO</th>
+                            <th>Continent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            for (const c of results) {
+                html += `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td><strong>${escapeHtml(c.text)}</strong></td>
+                        <td>${escapeHtml(c.iso)}</td>
+                        <td>${escapeHtml(c.continent)}</td>
+                    </tr>
+                `;
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function renderLocalities(container, data) {
+            const results = data.results || [];
+
+            let html = `
+                <div class="results-header">
+                    <h3>Results</h3>
+                    <span class="results-count">${results.length} items</span>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Country</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            for (const l of results) {
+                html += `
+                    <tr>
+                        <td>${l.id}</td>
+                        <td><strong>${escapeHtml(l.txt || '-')}</strong></td>
+                        <td>${escapeHtml(l.country || '-')}</td>
+                    </tr>
+                `;
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Calculate distance between two GPS points using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function renderLocalitiesWithGPS(container, data, centerLat = null, centerLon = null, unit = 'km') {
+            let results = data.results || [];
+            const isMiles = unit === 'mi';
+            const conversionFactor = isMiles ? 0.621371 : 1; // km to miles
+            const unitLabel = isMiles ? 'mi' : 'km';
+
+            // If we have a center point, calculate distances and sort by distance
+            if (centerLat != null && centerLon != null) {
+                results = results.map(l => ({
+                    ...l,
+                    distance: (l.latitude != null && l.longitude != null)
+                        ? calculateDistance(centerLat, centerLon, l.latitude, l.longitude) * conversionFactor
+                        : Infinity
+                })).sort((a, b) => a.distance - b.distance);
+            }
+
+            let html = `
+                <div class="results-header">
+                    <h3>Results</h3>
+                    <span class="results-count">${results.length} localities with GPS coordinates</span>
+                </div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Country</th>
+                            ${centerLat != null ? `<th>Distance (${unitLabel})</th>` : ''}
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Map</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            for (const l of results) {
+                const lat = l.latitude;
+                const lon = l.longitude;
+                const hasCoords = lat != null && lon != null;
+                const mapLink = hasCoords
+                    ? `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="color: var(--primary-color);">View</a>`
+                    : '-';
+                const distanceStr = l.distance != null && l.distance !== Infinity
+                    ? `${l.distance.toFixed(1)}`
+                    : '-';
+                html += `
+                    <tr>
+                        <td>${l.id}</td>
+                        <td><strong>${escapeHtml(l.txt || '-')}</strong></td>
+                        <td>${escapeHtml(l.country || '-')}</td>
+                        ${centerLat != null ? `<td>${distanceStr}</td>` : ''}
+                        <td>${lat != null ? lat.toFixed(4) : '-'}</td>
+                        <td>${lon != null ? lon.toFixed(4) : '-'}</td>
+                        <td>${mapLink}</td>
+                    </tr>
+                `;
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Helper to add Enter key support
+        function addEnterKeyHandler(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            if (input && button) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        button.click();
+                    }
+                });
+            }
+        }
+
+        // Add Enter key handlers for all forms
+        addEnterKeyHandler('api-token', 'connect-btn');
+        addEnterKeyHandler('ima-search', 'ima-search-btn');
+        addEnterKeyHandler('ima-page', 'ima-search-btn');
+        addEnterKeyHandler('mineral-name', 'mineral-search-btn');
+        addEnterKeyHandler('mineral-page', 'mineral-search-btn');
+        addEnterKeyHandler('mineral-id', 'mineral-detail-btn');
+        addEnterKeyHandler('country-page', 'countries-btn');
+        addEnterKeyHandler('country-id', 'country-detail-btn');
+        addEnterKeyHandler('locality-country', 'localities-btn');
+        addEnterKeyHandler('locality-name', 'localities-btn');
+        addEnterKeyHandler('elements-page', 'elements-search-btn');
+        addEnterKeyHandler('quick-search-query', 'quick-search-btn');
+        addEnterKeyHandler('loc-element-include', 'localities-element-btn');
+        addEnterKeyHandler('loc-element-exclude', 'localities-element-btn');
+        addEnterKeyHandler('gps-lat', 'localities-gps-btn');
+        addEnterKeyHandler('gps-lon', 'localities-gps-btn');
+        addEnterKeyHandler('gps-radius', 'localities-gps-btn');
+        addEnterKeyHandler('gps-country', 'localities-gps-btn');
+        addEnterKeyHandler('gps-name', 'localities-gps-btn');
+        addEnterKeyHandler('include-elements', 'elements-search-btn');
+        addEnterKeyHandler('exclude-elements', 'elements-search-btn');
+
+        // Event Handlers
+        connectBtn.addEventListener('click', async () => {
+            debug('Connect button clicked');
+            const token = apiTokenInput.value.trim();
+            debug('Token:', token ? '(set)' : '(empty)');
+            try {
+                debug('Calling set_api_token...');
+                const result = await invoke('set_api_token', { token });
+                debug('set_api_token result:', result);
+                updateStatus(true);
+            } catch (e) {
+                console.error('set_api_token error:', e);
+                alert('Failed to connect: ' + (e.message || JSON.stringify(e)));
+            }
+        });
+
+        disconnectBtn.addEventListener('click', async () => {
+            debug('Disconnect button clicked');
+            try {
+                await invoke('clear_client');
+                updateStatus(false);
+            } catch (e) {
+                console.error('clear_client error:', e);
+                alert('Error: ' + (e.message || JSON.stringify(e)));
+            }
+        });
+
+        endpointButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                debug('Endpoint button clicked:', btn.dataset.endpoint);
+                showPanel(btn.dataset.endpoint);
+            });
+        });
+
+        // IMA Minerals
+        document.getElementById('ima-search-btn').addEventListener('click', async () => {
+            debug('IMA Search button clicked');
+            const container = document.getElementById('ima-results');
+            showLoading(container);
+            try {
+                const params = {
+                    search: document.getElementById('ima-search').value,
+                    page: parseInt(document.getElementById('ima-page').value) || 1,
+                    pageSize: 20
+                };
+                debug('Calling search_ima_minerals with:', params);
+                const result = await invoke('search_ima_minerals', params);
+                debug('search_ima_minerals result:', result);
+                renderMineralsWithPagination(container, result, 'ima-page', 'ima-search-btn');
+            } catch (e) {
+                console.error('search_ima_minerals error:', e);
+                showError(container, e);
+            }
+        });
+
+        // Minerals Search
+        document.getElementById('mineral-search-btn').addEventListener('click', async () => {
+            const container = document.getElementById('mineral-results');
+            showLoading(container);
+            try {
+                const result = await invoke('search_minerals', {
+                    name: document.getElementById('mineral-name').value,
+                    page: parseInt(document.getElementById('mineral-page').value) || 1,
+                    pageSize: 20
+                });
+                renderMineralsWithPagination(container, result, 'mineral-page', 'mineral-search-btn');
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Mineral Details
+        document.getElementById('mineral-detail-btn').addEventListener('click', async () => {
+            const container = document.getElementById('mineral-detail-results');
+            const id = parseInt(document.getElementById('mineral-id').value);
+            if (!id) {
+                showError(container, 'Please enter a valid mineral ID');
+                return;
+            }
+            showLoading(container);
+            try {
+                const m = await invoke('get_mineral', { id });
+                let html = `
+                    <div class="mineral-card">
+                        <h4>${escapeHtml(m.name || 'Unknown')}</h4>
+                        <p class="formula">${formatFormula(m.mindat_formula || m.ima_formula || 'No formula')}</p>
+                        <p class="meta">
+                            <strong>ID:</strong> ${m.id} |
+                            <strong>Status:</strong> ${escapeHtml(m.ima_status || '-')} |
+                            <strong>Crystal System:</strong> ${escapeHtml(m.csystem || '-')}
+                        </p>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="formatted">Formatted</button>
+                        <button class="tab-btn" data-tab="raw">Raw JSON</button>
+                    </div>
+                    <div id="tab-formatted">
+                        <table class="results-table">
+                            <tbody>
+                                <tr><td><strong>Name</strong></td><td>${escapeHtml(m.name || '-')}</td></tr>
+                                <tr><td><strong>IMA Formula</strong></td><td>${formatFormula(m.ima_formula || '-')}</td></tr>
+                                <tr><td><strong>Mindat Formula</strong></td><td>${formatFormula(m.mindat_formula || '-')}</td></tr>
+                                <tr><td><strong>Crystal System</strong></td><td>${escapeHtml(m.csystem || '-')}</td></tr>
+                                <tr><td><strong>Colour</strong></td><td>${escapeHtml(m.colour || '-')}</td></tr>
+                                <tr><td><strong>Streak</strong></td><td>${escapeHtml(m.streak || '-')}</td></tr>
+                                <tr><td><strong>Hardness</strong></td><td>${m.hmin || '-'} - ${m.hmax || '-'}</td></tr>
+                                <tr><td><strong>Density</strong></td><td>${m.dmeas || m.dcalc || '-'}</td></tr>
+                                <tr><td><strong>Discovery Year</strong></td><td>${m.discovery_year || '-'}</td></tr>
+                                <tr><td><strong>Space Group</strong></td><td>${escapeHtml(m.spacegroup || '-')}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="tab-raw" class="hidden">
+                        <div class="json-output">${escapeHtml(JSON.stringify(m, null, 2))}</div>
+                    </div>
+                `;
+                container.innerHTML = html;
+
+                // Tab switching
+                container.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        container.querySelector('#tab-formatted').classList.toggle('hidden', btn.dataset.tab !== 'formatted');
+                        container.querySelector('#tab-raw').classList.toggle('hidden', btn.dataset.tab !== 'raw');
+                    });
+                });
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Elements Search
+        document.getElementById('elements-search-btn').addEventListener('click', async () => {
+            const container = document.getElementById('elements-results');
+            const includeRaw = document.getElementById('include-elements').value;
+            const include = cleanElementInput(includeRaw);
+            if (!include) {
+                showError(container, 'Please enter at least one valid element symbol (e.g., Cu, Au, Fe)');
+                return;
+            }
+            showLoading(container);
+            try {
+                const excludeRaw = document.getElementById('exclude-elements').value;
+                const exclude = cleanElementInput(excludeRaw);
+                const page = parseInt(document.getElementById('elements-page').value) || 1;
+                const result = await invoke('search_by_elements', {
+                    includeElements: include,
+                    excludeElements: exclude,
+                    page: page
+                });
+                renderMineralsWithPagination(container, result, 'elements-page', 'elements-search-btn');
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Countries
+        document.getElementById('countries-btn').addEventListener('click', async () => {
+            const container = document.getElementById('countries-results');
+            showLoading(container);
+            try {
+                const result = await invoke('list_countries', {
+                    page: parseInt(document.getElementById('countries-page').value) || 1
+                });
+                renderCountries(container, result);
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Localities
+        document.getElementById('localities-btn').addEventListener('click', async () => {
+            const container = document.getElementById('localities-results');
+            showLoading(container);
+            try {
+                const country = document.getElementById('locality-country').value || null;
+                const nameContains = document.getElementById('locality-name').value || null;
+                const result = await invoke('search_localities', {
+                    country,
+                    nameContains: nameContains
+                });
+                renderLocalities(container, result);
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // GPS Address Lookup (using Nominatim/OpenStreetMap)
+        document.getElementById('gps-lookup-btn').addEventListener('click', async () => {
+            const address = document.getElementById('gps-address').value.trim();
+            const statusEl = document.getElementById('gps-lookup-status');
+
+            if (!address) {
+                statusEl.innerHTML = '<span style="color: var(--error-color);">Please enter an address to look up</span>';
+                return;
+            }
+
+            statusEl.innerHTML = '<span>Looking up address...</span>';
+
+            try {
+                // Use Nominatim (OpenStreetMap) for geocoding - free, no API key required
+                // Request addressdetails to get country information
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&addressdetails=1`;
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'MindatExplorer/1.0'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const results = await response.json();
+
+                if (results.length === 0) {
+                    statusEl.innerHTML = '<span style="color: var(--error-color);">Address not found. Try a different search term.</span>';
+                    return;
+                }
+
+                const result = results[0];
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+
+                document.getElementById('gps-lat').value = lat.toFixed(4);
+                document.getElementById('gps-lon').value = lon.toFixed(4);
+
+                // Extract and auto-fill country
+                // Map common country names to Mindat format
+                if (result.address && result.address.country) {
+                    let country = result.address.country;
+                    // Mindat uses abbreviated country names
+                    const countryMap = {
+                        'United States': 'USA',
+                        'United States of America': 'USA',
+                        'United Kingdom': 'UK',
+                        'Russian Federation': 'Russia',
+                        'Democratic Republic of the Congo': 'DR Congo',
+                        'Republic of the Congo': 'Congo',
+                        'Czech Republic': 'Czechia',
+                    };
+                    if (countryMap[country]) {
+                        country = countryMap[country];
+                    }
+                    document.getElementById('gps-country').value = country;
+
+                    // Also extract state/region for better filtering
+                    // (Mindat's API returns limited results, so filtering by state helps)
+                    const state = result.address.state || result.address.region || result.address.province;
+                    if (state) {
+                        document.getElementById('gps-name').value = state;
+                    }
+                }
+
+                statusEl.innerHTML = `<span style="color: var(--success-color);">Found: ${escapeHtml(result.display_name)}</span>`;
+            } catch (e) {
+                console.error('Geocoding error:', e);
+                statusEl.innerHTML = `<span style="color: var(--error-color);">Lookup failed: ${escapeHtml(e.message)}</span>`;
+            }
+        });
+
+        // Address lookup on Enter key
+        document.getElementById('gps-address').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('gps-lookup-btn').click();
+            }
+        });
+
+        // Localities by GPS
+        document.getElementById('localities-gps-btn').addEventListener('click', async () => {
+            const container = document.getElementById('localities-gps-results');
+            const lat = parseFloat(document.getElementById('gps-lat').value);
+            const lon = parseFloat(document.getElementById('gps-lon').value);
+            const radius = parseInt(document.getElementById('gps-radius').value) || 50;
+            const unit = document.getElementById('gps-unit').value;
+            const country = document.getElementById('gps-country').value.trim() || null;
+            const nameContains = document.getElementById('gps-name').value.trim() || null;
+
+            debug('GPS Search clicked:', { lat, lon, radius, unit, country, nameContains });
+
+            if (isNaN(lat) || isNaN(lon)) {
+                showError(container, 'Please enter valid latitude and longitude coordinates');
+                return;
+            }
+            if (lat < -90 || lat > 90) {
+                showError(container, 'Latitude must be between -90 and 90');
+                return;
+            }
+            if (lon < -180 || lon > 180) {
+                showError(container, 'Longitude must be between -180 and 180');
+                return;
+            }
+            if (!country && !nameContains) {
+                showError(container, 'Please enter a country or name filter to narrow down the search');
+                return;
+            }
+
+            // Convert miles to km for API call
+            const radiusKm = unit === 'mi' ? radius * 1.60934 : radius;
+
+            // Tauri 2.0 auto-converts Rust snake_case params to JS camelCase
+            const invokeParams = {
+                latitude: lat,
+                longitude: lon,
+                radiusKm: radiusKm,
+                country: country,
+                nameContains: nameContains
+            };
+            debug('Calling search_localities_by_gps with params:', invokeParams);
+
+            showLoading(container);
+            try {
+                const result = await invoke('search_localities_by_gps', invokeParams);
+                debug('search_localities_by_gps result:', result);
+                renderLocalitiesWithGPS(container, result, lat, lon, unit);
+            } catch (e) {
+                debug('search_localities_by_gps error:', e);
+                showError(container, e);
+            }
+        });
+
+        // Localities by Element
+        document.getElementById('localities-element-btn').addEventListener('click', async () => {
+            const container = document.getElementById('localities-element-results');
+            const includeRaw = document.getElementById('loc-element-include').value;
+            const include = cleanElementInput(includeRaw);
+
+            debug('Localities by Element clicked:', { includeRaw, include });
+
+            if (!include) {
+                showError(container, 'Please enter at least one valid element symbol (e.g., Cu, Au, Fe)');
+                return;
+            }
+
+            showLoading(container);
+            try {
+                const excludeRaw = document.getElementById('loc-element-exclude').value;
+                const exclude = cleanElementInput(excludeRaw);
+                // Tauri 2.0 auto-converts Rust snake_case params to JS camelCase
+                const invokeParams = {
+                    includeElements: include,
+                    excludeElements: exclude
+                };
+                debug('Calling search_localities_by_elements with params:', invokeParams);
+                const result = await invoke('search_localities_by_elements', invokeParams);
+                debug('search_localities_by_elements result:', result);
+                renderLocalitiesWithGPS(container, result);
+            } catch (e) {
+                debug('search_localities_by_elements error:', e);
+                showError(container, e);
+            }
+        });
+
+        // Dana-8
+        document.getElementById('dana8-btn').addEventListener('click', async () => {
+            const container = document.getElementById('dana8-results');
+            showLoading(container);
+            try {
+                const result = await invoke('get_dana8_groups');
+                showJson(container, result);
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Strunz-10
+        document.getElementById('strunz10-btn').addEventListener('click', async () => {
+            const container = document.getElementById('strunz10-results');
+            showLoading(container);
+            try {
+                const result = await invoke('get_strunz10_classes');
+                showJson(container, result);
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Photo Count
+        document.getElementById('photocount-btn').addEventListener('click', async () => {
+            const container = document.getElementById('photocount-results');
+            showLoading(container);
+            try {
+                const result = await invoke('get_photo_count');
+                showJson(container, result);
+            } catch (e) {
+                showError(container, e);
+            }
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', async () => {
+            debug('DOM Content Loaded');
+
+            // Initialize Tauri
+            const tauriReady = await initTauri();
+            if (!tauriReady) {
+                debug('Tauri not ready, aborting initialization');
+                return;
+            }
+
+            // Check if already configured
+            try {
+                debug('Checking if client is configured...');
+                const configured = await invoke('is_configured');
+                debug('is_configured result:', configured);
+                updateStatus(configured);
+            } catch (e) {
+                console.error('Failed to check configuration:', e);
+                debug('is_configured error:', e);
+            }
+
+            debug('Initialization complete');
+        });
+    </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ mod geomaterials;
 mod localities;
 mod minerals_ima;
 mod pagination;
+pub mod serde_helpers;
 
 pub use common::*;
 pub use countries::*;

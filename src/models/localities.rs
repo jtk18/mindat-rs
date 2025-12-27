@@ -2,6 +2,11 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::serde_helpers::{
+    deserialize_optional_f64, deserialize_optional_i16, deserialize_optional_i32,
+    deserialize_optional_vec_i32,
+};
+
 /// A locality from the Mindat database.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Locality {
@@ -23,10 +28,10 @@ pub struct Locality {
     #[serde(default)]
     pub description_short: Option<String>,
     /// Latitude.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub latitude: Option<f64>,
     /// Longitude.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub longitude: Option<f64>,
     /// Language-specific text.
     #[serde(default)]
@@ -47,37 +52,37 @@ pub struct Locality {
     #[serde(default)]
     pub refs: Option<String>,
     /// Coordinate system.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub coordsystem: Option<i32>,
     /// Parent locality ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub parent: Option<i32>,
     /// Links.
     #[serde(default)]
     pub links: Option<String>,
     /// Area.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub area: Option<i32>,
     /// Non-hierarchical flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub non_hierarchical: Option<i32>,
     /// Age ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub age: Option<i32>,
     /// Meteorite type.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub meteorite_type: Option<i32>,
     /// Company ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub company: Option<i32>,
     /// Company 2 ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub company2: Option<i32>,
     /// Locality status ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub loc_status: Option<i32>,
     /// Locality group.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub loc_group: Option<i32>,
     /// Status year.
     #[serde(default)]
@@ -86,16 +91,16 @@ pub struct Locality {
     #[serde(default)]
     pub company_year: Option<String>,
     /// Discovered before.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub discovered_before: Option<i32>,
     /// Discovery year.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub discovery_year: Option<i32>,
     /// Discovery year type.
     #[serde(default)]
     pub discovery_year_type: Option<String>,
     /// Hierarchy level.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub level: Option<i32>,
     /// Included localities.
     #[serde(default)]
@@ -110,13 +115,13 @@ pub struct Locality {
     #[serde(default)]
     pub osmid: Option<String>,
     /// Geonames ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub geonames: Option<i32>,
     /// Timestamp.
     #[serde(default)]
     pub timestamp: Option<String>,
     /// Geomaterials at this locality (when expanded).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_i32")]
     pub geomaterials: Option<Vec<i32>>,
 }
 
@@ -214,16 +219,16 @@ pub struct LocalityAge {
     /// Age ID.
     pub age_id: i32,
     /// Age MA value.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub age_mav: Option<f64>,
     /// Age PM value.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub age_pmv: Option<f64>,
     /// Age MA2 value.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub age_ma2v: Option<f64>,
     /// Age PM2 value.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub age_pm2v: Option<f64>,
     /// Age method.
     #[serde(default)]
@@ -244,13 +249,13 @@ pub struct LocalityAge {
     #[serde(default)]
     pub age_pm2: Option<String>,
     /// Ages 1.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub ages1: Option<i32>,
     /// Ages 2.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub ages2: Option<i32>,
     /// Age type.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub age_type: Option<i32>,
 }
 
@@ -262,10 +267,10 @@ pub struct LocalityStatus {
     /// Status text.
     pub ls_text: String,
     /// Historical flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub ls_historical: Option<i32>,
     /// Wide flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub ls_wide: Option<i32>,
 }
 
@@ -277,19 +282,19 @@ pub struct LocalityType {
     /// Type text.
     pub lt_text: String,
     /// Parent type ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lt_parent: Option<i32>,
     /// Sort order.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i16")]
     pub lt_sortorder: Option<i16>,
     /// Erratic flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lt_erratic: Option<i32>,
     /// Area flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lt_area: Option<i32>,
     /// Underground flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lt_underground: Option<i32>,
 }
 
@@ -305,6 +310,6 @@ pub struct GeoRegion {
     #[serde(default)]
     pub lgr_updttime: Option<String>,
     /// Non-hierarchical flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lgr_non_hierarchical: Option<i32>,
 }

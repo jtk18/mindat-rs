@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "gui/src-tauri"]
+resolver = "2"
+
 [package]
 name = "mindat-rs"
 version = "0.1.0"
@@ -12,7 +16,7 @@ keywords = ["mindat", "mineralogy", "geology", "api", "minerals"]
 categories = ["api-bindings", "science"]
 
 [dependencies]
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", features = ["json", "native-tls"], default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }

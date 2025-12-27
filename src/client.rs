@@ -1,14 +1,30 @@
 //! HTTP client for the Mindat API.
 
 use reqwest::Client;
-use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
+use reqwest::header::{ACCEPT, AUTHORIZATION, HeaderMap, HeaderValue, USER_AGENT};
+use std::time::Duration;
 use url::Url;
 
 use crate::error::{MindatError, Result};
 use crate::models::*;
 
-/// Default base URL for the Mindat API.
-pub const DEFAULT_BASE_URL: &str = "https://api.mindat.org";
+/// Default base URL for the Mindat API (v1).
+/// Note: Must end with a slash for proper URL joining.
+pub const DEFAULT_BASE_URL: &str = "https://api.mindat.org/v1/";
+
+/// User-Agent string for API requests.
+/// Using a browser-like User-Agent to avoid Cloudflare blocks.
+const USER_AGENT_STRING: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+/// Create a configured HTTP client with proper timeouts and settings.
+fn create_http_client() -> Client {
+    Client::builder()
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
+        .pool_max_idle_per_host(5)
+        .build()
+        .expect("Failed to create HTTP client")
+}
 
 /// Client for interacting with the Mindat API.
 #[derive(Debug, Clone)]
@@ -30,7 +46,7 @@ impl MindatClient {
     /// ```
     pub fn new(token: impl Into<String>) -> Self {
         Self {
-            http: Client::new(),
+            http: create_http_client(),
             base_url: Url::parse(DEFAULT_BASE_URL).unwrap(),
             token: Some(token.into()),
         }
@@ -40,7 +56,7 @@ impl MindatClient {
     /// Some endpoints (like minerals_ima) work without authentication.
     pub fn anonymous() -> Self {
         Self {
-            http: Client::new(),
+            http: create_http_client(),
             base_url: Url::parse(DEFAULT_BASE_URL).unwrap(),
             token: None,
         }
@@ -64,6 +80,11 @@ impl MindatClient {
     /// Build request headers.
     fn headers(&self) -> Result<HeaderMap> {
         let mut headers = HeaderMap::new();
+
+        // Always include User-Agent and Accept to avoid Cloudflare blocks
+        headers.insert(USER_AGENT, HeaderValue::from_static(USER_AGENT_STRING));
+        headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
+
         if let Some(ref token) = self.token {
             let auth_value = format!("Token {}", token);
             headers.insert(
@@ -78,6 +99,8 @@ impl MindatClient {
 
     /// Make a GET request to the API.
     async fn get<T: serde::de::DeserializeOwned>(&self, path: &str) -> Result<T> {
+        // Strip leading slash to ensure proper URL joining with base URL
+        let path = path.strip_prefix('/').unwrap_or(path);
         let url = self.base_url.join(path)?;
         let response = self.http.get(url).headers(self.headers()?).send().await?;
 
@@ -90,6 +113,8 @@ impl MindatClient {
         T: serde::de::DeserializeOwned,
         Q: serde::Serialize,
     {
+        // Strip leading slash to ensure proper URL joining with base URL
+        let path = path.strip_prefix('/').unwrap_or(path);
         let url = self.base_url.join(path)?;
         let response = self
             .http
@@ -150,6 +175,8 @@ impl MindatClient {
     /// # }
     /// ```
     pub async fn countries(&self) -> Result<PaginatedResponse<Country>> {
+        // Note: The /countries/ endpoint may not exist in v1 API
+        // Countries are primarily available as filters on the localities endpoint
         self.get("/countries/").await
     }
 
@@ -159,6 +186,7 @@ impl MindatClient {
         struct Query {
             page: i32,
         }
+        // Note: The /countries/ endpoint may not exist in v1 API
         self.get_with_query("/countries/", &Query { page }).await
     }
 
@@ -318,7 +346,7 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             size: Option<i32>,
         }
-        self.get_with_query("/geomaterials_search/", &Query { q, size })
+        self.get_with_query("/geomaterials-search/", &Query { q, size })
             .await
     }
 
@@ -398,12 +426,12 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             page: Option<i32>,
         }
-        self.get_with_query("/locality_age/", &Query { page }).await
+        self.get_with_query("/locality-age/", &Query { page }).await
     }
 
     /// Get a specific locality age by ID.
     pub async fn locality_age(&self, age_id: i32) -> Result<LocalityAge> {
-        self.get(&format!("/locality_age/{}/", age_id)).await
+        self.get(&format!("/locality-age/{}/", age_id)).await
     }
 
     /// List locality statuses.
@@ -416,13 +444,13 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             page: Option<i32>,
         }
-        self.get_with_query("/locality_status/", &Query { page })
+        self.get_with_query("/locality-status/", &Query { page })
             .await
     }
 
     /// Get a specific locality status by ID.
     pub async fn locality_status(&self, ls_id: i32) -> Result<LocalityStatus> {
-        self.get(&format!("/locality_status/{}/", ls_id)).await
+        self.get(&format!("/locality-status/{}/", ls_id)).await
     }
 
     /// List locality types.
@@ -435,13 +463,13 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             page: Option<i32>,
         }
-        self.get_with_query("/locality_type/", &Query { page })
+        self.get_with_query("/locality-type/", &Query { page })
             .await
     }
 
     /// Get a specific locality type by ID.
     pub async fn locality_type(&self, lt_id: i32) -> Result<LocalityType> {
-        self.get(&format!("/locality_type/{}/", lt_id)).await
+        self.get(&format!("/locality-type/{}/", lt_id)).await
     }
 
     /// List geographic regions.
@@ -509,12 +537,12 @@ impl MindatClient {
             page_size: query.page_size,
         };
 
-        self.get_with_query("/minerals_ima/", &params).await
+        self.get_with_query("/minerals-ima/", &params).await
     }
 
     /// Get a specific IMA mineral by ID.
     pub async fn mineral_ima(&self, id: i32) -> Result<Geomaterial> {
-        self.get(&format!("/minerals_ima/{}/", id)).await
+        self.get(&format!("/minerals-ima/{}/", id)).await
     }
 
     // ==================== Classification Systems ====================
@@ -558,7 +586,7 @@ impl MindatClient {
 
     /// Get photo count statistics.
     pub async fn photocount(&self) -> Result<serde_json::Value> {
-        self.get("/photocount/").await
+        self.get("/photo-count/").await
     }
 }
 

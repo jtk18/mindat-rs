@@ -1,0 +1,15 @@
+# Node modules (if adding npm dependencies later)
+node_modules/
+
+# Build output
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
+
+# Tauri generated
+src-tauri/gen/

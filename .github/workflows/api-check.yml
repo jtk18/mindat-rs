@@ -231,35 +231,27 @@ jobs:
                 }
               }
 
+              const issueBody = "## Mindat API Changes Detected\n\n" +
+                "The nightly API check has detected changes in the upstream Mindat API that may require updates to this crate.\n\n" +
+                "### Detected Changes\n\n" +
+                "```\n" + changes + "\n```\n\n" +
+                "### Recommended Actions\n\n" +
+                "1. Review the changes above\n" +
+                "2. Update the Mindat API.yaml schema file if needed\n" +
+                "3. Update the Rust models in src/models/ to match any schema changes\n" +
+                "4. Update tests as needed\n" +
+                "5. Release a new version if breaking changes are involved\n\n" +
+                "### Links\n\n" +
+                "- [Mindat API Documentation](https://api.mindat.org/schema/redoc/)\n" +
+                "- [OpenMindat R Package](https://github.com/quexiang/OpenMindat) (reference implementation)\n\n" +
+                "---\n" +
+                "*This issue was automatically created by the API Change Detection workflow.*";
+
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title: issueTitle,
-                body: `## Mindat API Changes Detected
-
-The nightly API check has detected changes in the upstream Mindat API that may require updates to this crate.
-
-### Detected Changes
-
-\`\`\`
-${changes}
-\`\`\`
-
-### Recommended Actions
-
-1. Review the changes above
-2. Update the \`Mindat API.yaml\` schema file if needed
-3. Update the Rust models in \`src/models/\` to match any schema changes
-4. Update tests as needed
-5. Release a new version if breaking changes are involved
-
-### Links
-
-- [Mindat API Documentation](https://api.mindat.org/schema/redoc/)
-- [OpenMindat R Package](https://github.com/quexiang/OpenMindat) (reference implementation)
-
----
-*This issue was automatically created by the API Change Detection workflow.*`,
+                body: issueBody,
                 labels: ['api-change', 'needs-review']
               });
             }

@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::serde_helpers::{deserialize_optional_vec_i32, deserialize_optional_vec_string};
+
 /// An IMA-approved mineral from the Mindat database.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImaMaterial {
@@ -23,10 +25,10 @@ pub struct ImaMaterial {
     #[serde(default)]
     pub discovery_year: Option<String>,
     /// IMA status values.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub ima_status: Option<Vec<String>>,
     /// IMA notes.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub ima_notes: Option<Vec<String>>,
     /// Type specimen storage location.
     #[serde(default)]
@@ -38,7 +40,7 @@ pub struct ImaMaterial {
     #[serde(default)]
     pub mindat_guid: Option<String>,
     /// Type localities.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_i32")]
     pub type_localities: Option<Vec<i32>>,
     /// Short description.
     #[serde(default)]
