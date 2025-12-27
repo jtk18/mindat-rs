@@ -16,6 +16,7 @@ Mindat is the world's largest open database of minerals, rocks, meteorites, and 
 - Async/await support using tokio
 - Pagination helpers
 - Comprehensive error handling
+- **Optional GUI application** built with Tauri (supports desktop and mobile)
 
 ## Installation
 
@@ -213,6 +214,90 @@ match client.geomaterials(query).await {
     Err(e) => eprintln!("Error: {}", e),
 }
 ```
+
+## GUI Application (Optional)
+
+This crate includes an optional GUI application built with [Tauri](https://tauri.app/) for testing and exploring the Mindat API. The GUI provides a user-friendly interface to:
+
+- Search minerals by name, elements, or properties
+- Browse IMA-approved minerals (no authentication required)
+- Explore localities and countries
+- View classification systems (Dana-8, Strunz-10)
+- Get detailed mineral information
+
+### Prerequisites
+
+**Linux:**
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file \
+  libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+# Fedora
+sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
+  libappindicator-gtk3-devel librsvg2-devel
+```
+
+**macOS:**
+```bash
+xcode-select --install
+```
+
+**Windows:**
+- Install [Microsoft Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- Install [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+
+### Building the GUI
+
+```bash
+# From the repository root
+cd gui/src-tauri
+cargo build --release
+
+# Or run in development mode
+cargo run
+```
+
+### Running the GUI
+
+After building, the executable will be at:
+- Linux/macOS: `target/release/mindat-gui`
+- Windows: `target\release\mindat-gui.exe`
+
+### Using the GUI
+
+1. Launch the application
+2. Enter your Mindat API token (from [mindat.org](https://www.mindat.org/)) and click "Connect"
+3. Use the sidebar to select different API endpoints
+4. The "IMA Minerals" endpoint works without authentication
+
+### Mobile Support (iOS/Android)
+
+The GUI is built with Tauri 2.0, which supports mobile platforms. To build for iOS:
+
+```bash
+# Install Tauri CLI
+cargo install tauri-cli
+
+# Initialize iOS (requires Xcode)
+cd gui/src-tauri
+cargo tauri ios init
+
+# Build for iOS
+cargo tauri ios build
+```
+
+For Android:
+```bash
+# Initialize Android (requires Android Studio)
+cargo tauri android init
+
+# Build for Android
+cargo tauri android build
+```
+
+See the [Tauri Mobile Guide](https://v2.tauri.app/start/prerequisites/) for detailed setup instructions.
 
 ## Related Projects
 

@@ -4,6 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use super::common::{MinStats, Relation};
 use super::enums::*;
+use super::serde_helpers::{
+    deserialize_optional_f64, deserialize_optional_i32, deserialize_optional_u32,
+    deserialize_optional_vec, deserialize_optional_vec_i32, deserialize_optional_vec_string,
+};
 
 /// A geomaterial (mineral, variety, synonym, rock, etc.) from the Mindat database.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,25 +35,25 @@ pub struct Geomaterial {
     #[serde(default)]
     pub ima_formula: Option<String>,
     /// IMA status values.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub ima_status: Option<Vec<String>>,
     /// IMA notes.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub ima_notes: Option<Vec<String>>,
     /// Variety of (geomaterial ID).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub varietyof: Option<i32>,
     /// Synonym of (geomaterial ID).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub synid: Option<i32>,
     /// Polytype of (geomaterial ID).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub polytypeof: Option<i32>,
     /// Group ID (member of).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub groupid: Option<i32>,
     /// Entry type (0=mineral, 1=synonym, 2=variety, etc.).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub entrytype: Option<i32>,
     /// Entry type as text.
     #[serde(default)]
@@ -61,13 +65,13 @@ pub struct Geomaterial {
     #[serde(default)]
     pub impurities: Option<String>,
     /// Elements present.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub elements: Option<Vec<String>>,
     /// Significant elements.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub sigelements: Option<Vec<String>>,
     /// Key elements (important for mining).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_string")]
     pub key_elements: Option<Vec<String>>,
     /// Type locality form.
     #[serde(default)]
@@ -88,10 +92,10 @@ pub struct Geomaterial {
     #[serde(default)]
     pub discovery_year: Option<String>,
     /// Approval year.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_u32")]
     pub approval_year: Option<u32>,
     /// Publication year.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_u32")]
     pub publication_year: Option<u32>,
     /// IMA history.
     #[serde(default)]
@@ -115,19 +119,19 @@ pub struct Geomaterial {
     #[serde(default)]
     pub colour: Option<String>,
     /// Metamict flag.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub csmetamict: Option<i32>,
     /// Optical extinction direction.
     #[serde(default)]
     pub opticalextinction: Option<String>,
     /// Minimum Mohs hardness.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub hmin: Option<f64>,
     /// Maximum Mohs hardness.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub hmax: Option<f64>,
     /// Hardness type.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub hardtype: Option<i32>,
     /// Vickers hardness minimum.
     #[serde(default)]
@@ -136,13 +140,13 @@ pub struct Geomaterial {
     #[serde(default)]
     pub vhnmax: Option<String>,
     /// Vickers hardness error.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub vhnerror: Option<i32>,
     /// Vickers hardness weight.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub vhng: Option<i32>,
     /// Vickers hardness time.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub vhns: Option<i32>,
     /// Luminescence.
     #[serde(default)]
@@ -166,10 +170,10 @@ pub struct Geomaterial {
     #[serde(default)]
     pub csystem: Option<String>,
     /// Crystal class (point group ID).
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub cclass: Option<i32>,
     /// Space group ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub spacegroup: Option<i32>,
     /// Space group setting.
     #[serde(default)]
@@ -193,10 +197,10 @@ pub struct Geomaterial {
     #[serde(default)]
     pub gamma: Option<String>,
     /// Unit cell volume.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub va3: Option<f64>,
     /// Z value.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub z: Option<i32>,
     /// Measured density minimum.
     #[serde(default)]
@@ -283,10 +287,10 @@ pub struct Geomaterial {
     #[serde(default)]
     pub opticalr: Option<String>,
     /// Refractive index minimum.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub rimin: Option<f64>,
     /// Refractive index maximum.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_f64")]
     pub rimax: Option<f64>,
     /// UV fluorescence.
     #[serde(default)]
@@ -328,13 +332,13 @@ pub struct Geomaterial {
     #[serde(default)]
     pub electrical: Option<String>,
     /// Rock parent ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub rock_parent: Option<i32>,
     /// Rock parent 2 ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub rock_parent2: Option<i32>,
     /// Rock root ID.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub rock_root: Option<i32>,
     /// Rock BGS code.
     #[serde(default)]
@@ -343,19 +347,19 @@ pub struct Geomaterial {
     #[serde(default)]
     pub meteoritical_code: Option<String>,
     /// Weighting.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub weighting: Option<i32>,
     /// Relations to other geomaterials.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec")]
     pub relations: Option<Vec<Relation>>,
     /// Mineral statistics.
     #[serde(default)]
     pub minstats: Option<MinStats>,
     /// Localities where found.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_i32")]
     pub locality: Option<Vec<i32>>,
     /// Type localities.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_optional_vec_i32")]
     pub type_localities: Option<Vec<i32>>,
 }
 

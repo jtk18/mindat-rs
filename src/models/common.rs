@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::serde_helpers::deserialize_optional_i32;
+
 /// Relation between geomaterials.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Relation {
@@ -68,5 +70,6 @@ pub struct GeoRegionProperties {
     /// Last update time.
     pub lgr_updttime: Option<String>,
     /// Non-hierarchical flag.
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
     pub lgr_non_hierarchical: Option<i32>,
 }

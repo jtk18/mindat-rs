@@ -154,10 +154,10 @@ async fn test_ima_minerals_anonymous() {
         .expect("Failed to build client");
 
     Mock::given(method("GET"))
-        .and(path("/minerals_ima/"))
+        .and(path("/minerals-ima/"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "count": 6000,
-            "next": "http://example.com/minerals_ima/?page=2",
+            "next": "http://example.com/minerals-ima/?page=2",
             "previous": null,
             "results": [
                 {"id": 1, "name": "Abelsonite", "ima_formula": "NiC31H32N4", "ima_symbol": "Abs"}

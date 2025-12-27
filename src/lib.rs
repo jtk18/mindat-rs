@@ -103,13 +103,13 @@ mod tests {
     #[test]
     fn test_client_creation() {
         let client = MindatClient::new("test-token");
-        assert_eq!(client.base_url().as_str(), "https://api.mindat.org/");
+        assert_eq!(client.base_url().as_str(), "https://api.mindat.org/v1/");
     }
 
     #[test]
     fn test_anonymous_client() {
         let client = MindatClient::anonymous();
-        assert_eq!(client.base_url().as_str(), "https://api.mindat.org/");
+        assert_eq!(client.base_url().as_str(), "https://api.mindat.org/v1/");
     }
 
     #[test]
