@@ -150,6 +150,10 @@ pub struct LocalitiesQuery {
     pub expand: Option<Vec<String>>,
     /// Cursor for pagination.
     pub cursor: Option<String>,
+    /// Page size (number of results per page).
+    pub page_size: Option<i32>,
+    /// Page number for pagination.
+    pub page: Option<i32>,
 }
 
 impl LocalitiesQuery {
@@ -209,6 +213,18 @@ impl LocalitiesQuery {
     /// Set cursor for pagination.
     pub fn cursor(mut self, cursor: impl Into<String>) -> Self {
         self.cursor = Some(cursor.into());
+        self
+    }
+
+    /// Set page size (number of results per page).
+    pub fn page_size(mut self, size: i32) -> Self {
+        self.page_size = Some(size);
+        self
+    }
+
+    /// Set page number for pagination.
+    pub fn page(mut self, page: i32) -> Self {
+        self.page = Some(page);
         self
     }
 }

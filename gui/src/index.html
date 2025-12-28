@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mindat Explorer</title>
+    <!-- Leaflet CSS and JS for map functionality -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -431,6 +434,76 @@
             font-size: 0.85rem;
             color: var(--text-muted);
         }
+
+        /* Map Search Styles */
+        #map-container {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .map-wrapper {
+            position: relative;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-controls button {
+            background: white;
+            border: 2px solid rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .map-controls button:hover {
+            background: var(--bg-color);
+        }
+
+        .map-status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .map-status.loading {
+            color: var(--text-muted);
+        }
+
+        .map-status.success {
+            color: var(--success-color);
+        }
+
+        .map-status.error {
+            color: var(--error-color);
+        }
+
+        .map-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .map-filters .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
     </style>
 </head>
 <body>
@@ -466,6 +539,7 @@
                     <li><button data-endpoint="elements">By Elements <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="localities">Localities <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="localities-gps">Localities by GPS <span class="endpoint-badge auth">Auth</span></button></li>
+                    <li><button data-endpoint="map-search">Map Search <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="localities-element">Localities by Element <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="dana8">Dana-8 Groups <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="strunz10">Strunz-10 Classes <span class="endpoint-badge auth">Auth</span></button></li>
@@ -649,6 +723,38 @@
                     </div>
                 </div>
 
+                <!-- Map Search Panel -->
+                <div id="panel-map-search" class="panel hidden">
+                    <div class="panel-header">
+                        <h2>Map Search</h2>
+                    </div>
+                    <div class="panel-body">
+                        <p style="margin-bottom: 16px; color: var(--text-muted);">
+                            Explore mineral localities on the map. <strong>Tip:</strong> The API returns limited results (~10) for broad searches.
+                            Add a state name or locality type (Mine, Quarry) to find more results.
+                        </p>
+
+                        <div class="map-filters">
+                            <div class="input-group">
+                                <label for="map-country">Country</label>
+                                <input type="text" id="map-country" placeholder="e.g., USA, Brazil">
+                            </div>
+                            <div class="input-group">
+                                <label for="map-name">Search Term (state, type, or name)</label>
+                                <input type="text" id="map-name" placeholder="e.g., Colorado, Arizona, Mine, Quarry">
+                            </div>
+                        </div>
+
+                        <div class="map-wrapper">
+                            <div id="map-container"></div>
+                            <div class="map-controls">
+                                <button class="primary" id="map-search-btn">Search this area</button>
+                            </div>
+                            <div class="map-status" id="map-status">Zoom in and click "Search this area"</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Localities by Element Panel -->
                 <div id="panel-localities-element" class="panel hidden">
                     <div class="panel-header">
@@ -824,6 +930,14 @@
             document.getElementById(`panel-${endpoint}`).classList.remove('hidden');
             endpointButtons.forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-endpoint="${endpoint}"]`).classList.add('active');
+
+            // Initialize map when map-search panel is shown
+            if (endpoint === 'map-search') {
+                // Use setTimeout to ensure the container is visible before initializing
+                setTimeout(() => {
+                    initMap();
+                }, 100);
+            }
         }
 
         function renderMinerals(container, data, showFormula = true) {
@@ -1514,6 +1628,134 @@
                 showError(container, e);
             }
         });
+
+        // ============================================
+        // Map Search Functionality
+        // ============================================
+        let map = null;
+        let markersLayer = null;
+        let mapInitialized = false;
+
+        function initMap() {
+            if (mapInitialized) {
+                // Just invalidate size in case container was resized
+                map.invalidateSize();
+                return;
+            }
+
+            debug('Initializing map...');
+
+            // Create map centered on USA
+            map = L.map('map-container').setView([39.8283, -98.5795], 4);
+
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Create layer group for markers
+            markersLayer = L.layerGroup().addTo(map);
+
+            mapInitialized = true;
+            debug('Map initialized');
+        }
+
+        function updateMapStatus(message, type = '') {
+            const statusEl = document.getElementById('map-status');
+            statusEl.textContent = message;
+            statusEl.className = 'map-status' + (type ? ' ' + type : '');
+        }
+
+        function updateMapMarkers(localities) {
+            if (!markersLayer) return;
+
+            markersLayer.clearLayers();
+
+            let count = 0;
+            for (const loc of localities) {
+                if (loc.latitude != null && loc.longitude != null) {
+                    const marker = L.marker([loc.latitude, loc.longitude])
+                        .bindPopup(`
+                            <strong>${escapeHtml(loc.txt || 'Unknown')}</strong><br>
+                            ${loc.country ? escapeHtml(loc.country) + '<br>' : ''}
+                            <small>ID: ${loc.id}</small><br>
+                            <small>${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}</small><br>
+                            <a href="https://www.mindat.org/loc-${loc.id}.html" target="_blank" style="color: #2563eb;">View on Mindat</a>
+                        `);
+                    markersLayer.addLayer(marker);
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        async function searchMapArea() {
+            if (!map) {
+                updateMapStatus('Map not initialized', 'error');
+                return;
+            }
+
+            const country = document.getElementById('map-country').value.trim() || null;
+            const nameContains = document.getElementById('map-name').value.trim() || null;
+
+            if (!country && !nameContains) {
+                updateMapStatus('Please enter a country or name filter', 'error');
+                return;
+            }
+
+            const bounds = map.getBounds();
+            const center = bounds.getCenter();
+            const ne = bounds.getNorthEast();
+
+            // Calculate radius from center to corner
+            const radiusKm = calculateDistance(center.lat, center.lng, ne.lat, ne.lng);
+
+            debug('Map search:', {
+                center: { lat: center.lat, lng: center.lng },
+                radiusKm,
+                country,
+                nameContains
+            });
+
+            updateMapStatus('Searching...', 'loading');
+
+            try {
+                const result = await invoke('search_localities_by_gps', {
+                    latitude: center.lat,
+                    longitude: center.lng,
+                    radiusKm: radiusKm,
+                    country: country,
+                    nameContains: nameContains
+                });
+
+                debug('Map search result:', result);
+
+                const localities = result.results || [];
+                const markerCount = updateMapMarkers(localities);
+                const truncated = result.truncated || false;
+
+                if (markerCount === 0) {
+                    updateMapStatus('No localities found in this area', 'error');
+                } else if (truncated) {
+                    updateMapStatus(`Found ${markerCount} localities (showing first 500, zoom in for more)`, 'success');
+                } else {
+                    updateMapStatus(`Found ${markerCount} localities`, 'success');
+                }
+            } catch (e) {
+                debug('Map search error:', e);
+                const errorMsg = typeof e === 'object' ? (e.message || JSON.stringify(e)) : e;
+                updateMapStatus('Error: ' + errorMsg, 'error');
+            }
+        }
+
+        // Map search button handler
+        document.getElementById('map-search-btn').addEventListener('click', searchMapArea);
+
+        // Enter key handlers for map filters
+        addEnterKeyHandler('map-country', 'map-search-btn');
+        addEnterKeyHandler('map-name', 'map-search-btn');
 
         // Initialize
         window.addEventListener('DOMContentLoaded', async () => {

@@ -64,4 +64,15 @@ impl<T> CursorPaginatedResponse<T> {
             })
         })
     }
+
+    /// Extracts the page number from the next URL.
+    pub fn next_page(&self) -> Option<i32> {
+        self.next.as_ref().and_then(|url| {
+            url::Url::parse(url).ok().and_then(|u| {
+                u.query_pairs()
+                    .find(|(k, _)| k == "page")
+                    .and_then(|(_, v)| v.parse().ok())
+            })
+        })
+    }
 }

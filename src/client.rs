@@ -395,6 +395,10 @@ impl MindatClient {
             omit: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             cursor: Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            page_size: Option<i32>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            page: Option<i32>,
         }
 
         let params = QueryParams {
@@ -407,6 +411,8 @@ impl MindatClient {
             fields: query.fields,
             omit: query.omit,
             cursor: query.cursor,
+            page_size: query.page_size,
+            page: query.page,
         };
 
         self.get_with_query("/localities/", &params).await

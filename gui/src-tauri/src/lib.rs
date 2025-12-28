@@ -383,42 +383,94 @@ async fn search_localities_by_gps(
         max_lon
     );
 
-    // Build query with filters
-    let mut query = LocalitiesQuery::new();
-    if let Some(c) = country {
-        if !c.is_empty() {
-            query = query.country(&c);
-        }
-    }
-    if let Some(n) = name_contains {
-        if !n.is_empty() {
-            query = query.name_contains(&n);
-        }
-    }
+    // Fetch multiple pages to get more results
+    const MAX_PAGES: i32 = 50; // Fetch up to 500 localities
+    let mut all_results = Vec::new();
+    let mut current_page: i32 = 1;
+    let mut truncated = false;
 
-    debug_log!("Fetching localities with filters...");
-    let response = client.localities(query).await;
-    match &response {
-        Ok(r) => debug_log!("Got {} localities, filtering by GPS...", r.results.len()),
-        Err(e) => debug_log!("Query failed: {}", e),
-    }
-    let mut response = response?;
+    loop {
+        let mut page_query = LocalitiesQuery::new().page(current_page);
+        if let Some(ref c) = country {
+            if !c.is_empty() {
+                page_query = page_query.country(c);
+            }
+        }
+        if let Some(ref n) = name_contains {
+            if !n.is_empty() {
+                page_query = page_query.name_contains(n);
+            }
+        }
 
-    // Filter results to only include localities with GPS within bounding box
-    response.results.retain(|loc| {
-        if let (Some(lat), Some(lon)) = (loc.latitude, loc.longitude) {
-            lat >= min_lat && lat <= max_lat && lon >= min_lon && lon <= max_lon
+        debug_log!("Fetching page {}...", current_page);
+        let response = client.localities(page_query).await;
+        match &response {
+            Ok(r) => debug_log!(
+                "Page {} returned {} localities",
+                current_page,
+                r.results.len()
+            ),
+            Err(e) => {
+                debug_log!("Page {} failed: {}", current_page, e);
+                break;
+            }
+        }
+
+        let response = response?;
+        let next_page = response.next_page();
+        all_results.extend(response.results);
+
+        // Check for next page
+        if let Some(page) = next_page {
+            if page > MAX_PAGES {
+                debug_log!("Reached max pages limit ({}), results truncated", MAX_PAGES);
+                truncated = true;
+                break;
+            }
+            current_page = page;
         } else {
-            false
+            debug_log!("No more pages after page {}", current_page);
+            break;
         }
-    });
+    }
 
     debug_log!(
-        "Found {} localities within {}km",
-        response.results.len(),
-        radius_km
+        "Fetched {} total localities, filtering by GPS...",
+        all_results.len()
     );
-    Ok(serde_json::to_value(response).unwrap())
+
+    // Filter results to only include localities with GPS within bounding box
+    let filtered: Vec<_> = all_results
+        .into_iter()
+        .filter(|loc| {
+            if let (Some(lat), Some(lon)) = (loc.latitude, loc.longitude) {
+                lat >= min_lat && lat <= max_lat && lon >= min_lon && lon <= max_lon
+            } else {
+                false
+            }
+        })
+        .collect();
+
+    debug_log!(
+        "Found {} localities within {}km{}",
+        filtered.len(),
+        radius_km,
+        if truncated {
+            " (results truncated)"
+        } else {
+            ""
+        }
+    );
+
+    // Return results with truncated flag
+    let result = serde_json::json!({
+        "results": filtered,
+        "truncated": truncated,
+        "fetched_pages": current_page,
+        "next": null,
+        "previous": null
+    });
+    Ok(result)
 }
 
 /// Search localities by elements
