@@ -7,6 +7,7 @@ name = "mindat-rs"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
+authors = ["Jason Kiniry <jason.kiniry@gmail.com>"]
 description = "A Rust client library for the Mindat API - access mineralogical data including geomaterials, localities, and IMA minerals"
 license = "MIT"
 repository = "https://github.com/jtk18/mindat-rs"
