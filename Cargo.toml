@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "gui/src-tauri"]
+members = [".", "gui/src-tauri", "mcp-server"]
 resolver = "2"
 
 [package]

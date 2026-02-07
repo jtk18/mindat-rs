@@ -142,3 +142,62 @@ Remove-Item -Recurse -Force "$env:LOCALAPPDATA\org.mindat.explorer" -ErrorAction
 - API returns limited results per page (~10-20), use pagination for more
 - GPS locality search requires country or name filter to avoid timeout
 - Address geocoding uses Nominatim/OpenStreetMap (free, no API key)
+
+## MCP Server for Claude Desktop
+
+The `mcp-server/` directory contains an MCP (Model Context Protocol) server that exposes the mindat-rs library to Claude Desktop and other MCP clients.
+
+### Building the MCP Server
+
+```bash
+# Build the MCP server
+cargo build -p mindat-mcp --release
+
+# The binary will be at target/release/mindat-mcp
+```
+
+### Claude Desktop Configuration
+
+Add the following to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+**Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "mindat": {
+      "command": "/path/to/mindat-mcp",
+      "env": {
+        "MINDAT_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Replace `/path/to/mindat-mcp` with the actual path to the built binary.
+
+### Available MCP Tools
+
+The MCP server exposes these tools to Claude:
+
+| Tool | Description | Requires API Key |
+|------|-------------|------------------|
+| `search_minerals` | Search minerals by name | Yes |
+| `search_ima_minerals` | Search IMA-approved minerals | **No** |
+| `get_mineral` | Get mineral details by ID | Yes |
+| `search_by_elements` | Find minerals by chemical elements | Yes |
+| `quick_search` | Fast autocomplete search | Yes |
+| `search_localities` | Search mineral localities | Yes |
+| `search_localities_by_gps` | Find localities near coordinates | Yes |
+| `get_locality` | Get locality details by ID | Yes |
+| `list_countries` | List all countries | Yes |
+| `get_dana_groups` | Get Dana classification groups | Yes |
+| `get_strunz_classes` | Get Strunz classification classes | Yes |
+| `get_photo_count` | Get database photo statistics | Yes |
+
+### API Key
+
+Get a free API key at https://api.mindat.org/ - the `search_ima_minerals` tool works without authentication for basic mineral searches.
