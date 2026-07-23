@@ -737,15 +737,10 @@ impl MindatClient {
 
     // ==================== Classification Systems ====================
 
-    /// List Dana 8th edition classification entries.
-    pub async fn dana8_list(&self, page: Option<i32>) -> Result<serde_json::Value> {
-        #[derive(serde::Serialize)]
-        struct Query {
-            #[serde(skip_serializing_if = "Option::is_none")]
-            page: Option<i32>,
-        }
-        self.get_with_query("/dana-8/", &Query { page }).await
-    }
+    // Note: the `/dana-8/` and `/nickel-strunz-10/` base list endpoints appear
+    // in the published OpenAPI schema but return 404 on the live server, so
+    // they are intentionally not exposed. Use the group/class/subclass/family
+    // and by-id methods below instead.
 
     /// Get Dana 8th edition classification groups.
     pub async fn dana8_groups(&self) -> Result<serde_json::Value> {
@@ -760,17 +755,6 @@ impl MindatClient {
     /// Get a specific Dana 8th edition classification.
     pub async fn dana8(&self, id: i32) -> Result<serde_json::Value> {
         self.get(&format!("/dana-8/{}/", id)).await
-    }
-
-    /// List Nickel-Strunz 10th edition classification entries.
-    pub async fn strunz10_list(&self, page: Option<i32>) -> Result<serde_json::Value> {
-        #[derive(serde::Serialize)]
-        struct Query {
-            #[serde(skip_serializing_if = "Option::is_none")]
-            page: Option<i32>,
-        }
-        self.get_with_query("/nickel-strunz-10/", &Query { page })
-            .await
     }
 
     /// Get Nickel-Strunz 10th edition classification classes.
@@ -1175,18 +1159,15 @@ impl MindatClient {
             .await
     }
 
-    /// Find locality IDs by required/excluded mineral IDs.
+    /// Find locality IDs containing (`inc`) and excluding (`exc`) minerals.
     ///
-    /// `inc` and `exc` are comma-separated mineral-ID lists.
-    pub async fn loc_by_min(
-        &self,
-        inc: Option<&str>,
-        exc: Option<&str>,
-    ) -> Result<Vec<i64>> {
+    /// `inc` (required by the API) and `exc` are comma-separated mineral-ID
+    /// lists. Note: the upstream endpoint currently returns HTTP 500 when `exc`
+    /// is omitted, so pass a non-empty `exc` for reliable results.
+    pub async fn loc_by_min(&self, inc: &str, exc: Option<&str>) -> Result<Vec<i64>> {
         #[derive(serde::Serialize)]
         struct Query<'a> {
-            #[serde(skip_serializing_if = "Option::is_none")]
-            inc: Option<&'a str>,
+            inc: &'a str,
             #[serde(skip_serializing_if = "Option::is_none")]
             exc: Option<&'a str>,
         }
