@@ -1,4 +1,4 @@
-use mindat_rs::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, MindatClient};
+use mindat_rs::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, MindatClient, ReferencesQuery};
 
 #[tokio::main]
 async fn main() -> mindat_rs::Result<()> {
@@ -28,13 +28,18 @@ async fn main() -> mindat_rs::Result<()> {
         Err(e) => println!("   ✗ Error: {}", e),
     }
 
-    // Test 2: Countries
-    println!("\n2. Testing Countries...");
-    match client.countries().await {
+    // Test 2: References (new endpoint)
+    println!("\n2. Testing References (search: quartz)...");
+    let ref_query = ReferencesQuery::new().search("quartz").page_size(3);
+    match client.references(ref_query).await {
         Ok(result) => {
-            println!("   ✓ Found {} countries", result.count.unwrap_or(0));
-            for c in result.results.iter().take(3) {
-                println!("     - {} ({})", c.text, c.iso);
+            println!("   ✓ Found {} references", result.count.unwrap_or(0));
+            for r in result.results.iter().take(3) {
+                println!(
+                    "     - [{}] {}",
+                    r.ref_id,
+                    r.ref_title.as_deref().unwrap_or("?")
+                );
             }
         }
         Err(e) => println!("   ✗ Error: {}", e),

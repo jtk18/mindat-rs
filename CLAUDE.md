@@ -193,10 +193,14 @@ The MCP server exposes these tools to Claude:
 | `search_localities` | Search mineral localities | Yes |
 | `search_localities_by_gps` | Find localities near coordinates | Yes |
 | `get_locality` | Get locality details by ID | Yes |
-| `list_countries` | List all countries | Yes |
+| `search_references` | Search bibliographic references | Yes |
 | `get_dana_groups` | Get Dana classification groups | Yes |
 | `get_strunz_classes` | Get Strunz classification classes | Yes |
-| `get_photo_count` | Get database photo statistics | Yes |
+
+> **Note:** The `list_countries` and `get_photo_count` tools were removed because
+> the upstream `/countries/` and `/photocount/` endpoints no longer exist in the
+> Mindat v1 API. Country names ("USA", "Brazil") are used directly as filters on
+> `search_localities` / `search_localities_by_gps`.
 
 ### API Key
 

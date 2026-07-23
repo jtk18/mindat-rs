@@ -219,43 +219,6 @@ async fn get_mineral(state: State<'_, AppState>, id: i32) -> CommandResult<serde
     Ok(serde_json::to_value(mineral).unwrap())
 }
 
-/// List countries
-#[tauri::command]
-async fn list_countries(
-    state: State<'_, AppState>,
-    page: Option<i32>,
-) -> CommandResult<serde_json::Value> {
-    debug_log!("list_countries called: page={:?}", page);
-    let client = get_client(&state).await?;
-
-    debug_log!("Fetching countries...");
-    let response = match page {
-        Some(p) => client.countries_page(p).await,
-        None => client.countries().await,
-    };
-    match &response {
-        Ok(r) => debug_log!("Got {} countries", r.results.len()),
-        Err(e) => debug_log!("Query failed: {}", e),
-    }
-    let result = response?;
-    Ok(serde_json::to_value(result).unwrap())
-}
-
-/// Get a specific country by ID
-#[tauri::command]
-async fn get_country(state: State<'_, AppState>, id: i32) -> CommandResult<serde_json::Value> {
-    debug_log!("get_country called: id={}", id);
-    let client = get_client(&state).await?;
-    debug_log!("Fetching country...");
-    let response = client.country(id).await;
-    match &response {
-        Ok(_) => debug_log!("Got country"),
-        Err(e) => debug_log!("Query failed: {}", e),
-    }
-    let country = response?;
-    Ok(serde_json::to_value(country).unwrap())
-}
-
 /// Search localities
 #[tauri::command]
 async fn search_localities(
@@ -417,17 +380,17 @@ async fn search_localities_by_gps(
         }
 
         let response = response?;
-        let next_page = response.next_page();
+        let has_next = response.has_next();
         all_results.extend(response.results);
 
         // Check for next page
-        if let Some(page) = next_page {
-            if page > MAX_PAGES {
+        if has_next {
+            if current_page + 1 > MAX_PAGES {
                 debug_log!("Reached max pages limit ({}), results truncated", MAX_PAGES);
                 truncated = true;
                 break;
             }
-            current_page = page;
+            current_page += 1;
         } else {
             debug_log!("No more pages after page {}", current_page);
             break;
@@ -558,21 +521,6 @@ async fn quick_search(
     Ok(serde_json::to_value(results).unwrap())
 }
 
-/// Get photo count statistics
-#[tauri::command]
-async fn get_photo_count(state: State<'_, AppState>) -> CommandResult<serde_json::Value> {
-    debug_log!("get_photo_count called");
-    let client = get_client(&state).await?;
-    debug_log!("Fetching photo count...");
-    let response = client.photocount().await;
-    match &response {
-        Ok(_) => debug_log!("Got photo count"),
-        Err(e) => debug_log!("Query failed: {}", e),
-    }
-    let count = response?;
-    Ok(count)
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     debug_log!("Starting Mindat Explorer GUI...");
@@ -587,8 +535,6 @@ pub fn run() {
             search_minerals,
             search_ima_minerals,
             get_mineral,
-            list_countries,
-            get_country,
             search_localities,
             search_localities_by_gps,
             search_localities_by_elements,
@@ -597,7 +543,6 @@ pub fn run() {
             get_dana8_groups,
             get_strunz10_classes,
             quick_search,
-            get_photo_count,
         ]);
 
     #[cfg(desktop)]

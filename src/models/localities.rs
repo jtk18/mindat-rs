@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::serde_helpers::{
-    deserialize_optional_f64, deserialize_optional_i16, deserialize_optional_i32,
+    deserialize_i64, deserialize_optional_f64, deserialize_optional_i16, deserialize_optional_i32,
     deserialize_optional_vec_i32,
 };
 
@@ -140,6 +140,18 @@ pub struct LocalitiesQuery {
     pub elements_exc: Option<String>,
     /// Filter by IDs.
     pub id_in: Option<Vec<i32>>,
+    /// Only localities at or above this hierarchy level.
+    pub level_gte: Option<i32>,
+    /// Only localities at or below this hierarchy level.
+    pub level_lte: Option<i32>,
+    /// Only localities with at least this many sub-localities.
+    pub sublocs_gte: Option<i32>,
+    /// Only localities with at most this many sub-localities.
+    pub sublocs_lte: Option<i32>,
+    /// Filter by non-hierarchical flag.
+    pub non_hierarchial: Option<i32>,
+    /// Description text starts with (case-insensitive).
+    pub revtxtd_istartswith: Option<String>,
     /// Updated after datetime.
     pub updated_at: Option<String>,
     /// Fields to include.
@@ -148,8 +160,6 @@ pub struct LocalitiesQuery {
     pub omit: Option<String>,
     /// Fields to expand.
     pub expand: Option<Vec<String>>,
-    /// Cursor for pagination.
-    pub cursor: Option<String>,
     /// Page size (number of results per page).
     pub page_size: Option<i32>,
     /// Page number for pagination.
@@ -210,9 +220,10 @@ impl LocalitiesQuery {
         self
     }
 
-    /// Set cursor for pagination.
-    pub fn cursor(mut self, cursor: impl Into<String>) -> Self {
-        self.cursor = Some(cursor.into());
+    /// Filter by hierarchy level range (inclusive).
+    pub fn level_range(mut self, min: i32, max: i32) -> Self {
+        self.level_gte = Some(min);
+        self.level_lte = Some(max);
         self
     }
 
@@ -314,18 +325,80 @@ pub struct LocalityType {
     pub lt_underground: Option<i32>,
 }
 
-/// Geographic region (with GeoJSON geometry).
+/// A translated locality name (`/locality-translations/`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GeoRegion {
-    /// Region ID.
-    pub id: i32,
-    /// Region text.
-    #[serde(default)]
-    pub lgr_revtxtd: Option<String>,
-    /// Update time.
-    #[serde(default)]
-    pub lgr_updttime: Option<String>,
-    /// Non-hierarchical flag.
+pub struct LocalityTranslation {
+    /// Translation ID.
+    #[serde(deserialize_with = "deserialize_i64")]
+    pub lt_id: i64,
+    /// Locality ID.
     #[serde(default, deserialize_with = "deserialize_optional_i32")]
-    pub lgr_non_hierarchical: Option<i32>,
+    pub lt_loc: Option<i32>,
+    /// Translated text.
+    #[serde(default)]
+    pub lt_text: Option<String>,
+    /// Translation datetime.
+    #[serde(default)]
+    pub lt_datetime: Option<String>,
+    /// Contributing user ID.
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
+    pub lt_uid: Option<i32>,
+    /// ISO language code.
+    #[serde(default)]
+    pub lt_iso: Option<String>,
+    /// Important flag.
+    #[serde(default, deserialize_with = "deserialize_optional_i32")]
+    pub lt_important: Option<i32>,
+}
+
+/// Builder for `/locality-translations/` query parameters.
+#[derive(Debug, Clone, Default)]
+pub struct LocalityTranslationsQuery {
+    /// Filter by locality ID.
+    pub lt_loc: Option<i32>,
+    /// Filter by ISO language code.
+    pub lt_iso: Option<String>,
+    /// Filter by translated text.
+    pub lt_text: Option<String>,
+    /// Filter by important flag.
+    pub lt_important: Option<i32>,
+    /// Modified at/after datetime.
+    pub lt_datetime_gte: Option<String>,
+    /// Ordering field.
+    pub ordering: Option<String>,
+    /// Page number.
+    pub page: Option<i32>,
+    /// Page size.
+    pub page_size: Option<i32>,
+}
+
+impl LocalityTranslationsQuery {
+    /// Create a new empty query.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Filter to translations for a given locality.
+    pub fn locality(mut self, locality_id: i32) -> Self {
+        self.lt_loc = Some(locality_id);
+        self
+    }
+
+    /// Filter by ISO language code.
+    pub fn language(mut self, iso: impl Into<String>) -> Self {
+        self.lt_iso = Some(iso.into());
+        self
+    }
+
+    /// Set page number.
+    pub fn page(mut self, page: i32) -> Self {
+        self.page = Some(page);
+        self
+    }
+
+    /// Set page size.
+    pub fn page_size(mut self, size: i32) -> Self {
+        self.page_size = Some(size);
+        self
+    }
 }

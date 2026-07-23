@@ -81,12 +81,26 @@
 //!
 //! ## Available Endpoints
 //!
-//! - **Countries**: List and retrieve country information
 //! - **Geomaterials**: Search minerals, rocks, varieties, synonyms, and more
-//! - **Localities**: Search mineral localities worldwide
-//! - **IMA Minerals**: Access IMA-approved mineral species
+//! - **Localities**: Search mineral localities worldwide (+ name translations)
+//! - **IMA Minerals**: Full search over IMA-approved mineral species (no API key required)
+//! - **References**: Bibliographic references, authors, citations, and lookup tables
+//! - **Occurrences**: Mineral-at-locality occurrences and aggregated statistics
+//! - **Crystallography**: Crystal classes, space groups, and space-group sets
+//! - **Relations**: Relationships between minerals
+//! - **Geospatial**: Point/polygon queries for localities and mineral occurrences
 //! - **Classification**: Dana 8th ed. and Nickel-Strunz 10th ed. systems
-//! - **Locality Metadata**: Ages, statuses, types, and geographic regions
+//! - **Locality Metadata**: Ages, statuses, and types
+//! - **Exports**: Bulk data export links
+//!
+//! ## Note on the Mindat API (v1)
+//!
+//! The standalone `/countries/`, `/photocount/`, and `/locgeoregion2/` endpoints
+//! were removed upstream and are no longer part of this crate. Filter localities
+//! by country using [`LocalitiesQuery::country`] (e.g. `"USA"`, `"Brazil"`).
+//! Note also that `/geomaterials/` and `/minerals-ima/` use the `el_inc`/`el_exc`
+//! element filters and `page-size`, while `/localities/` keeps `elements_inc`/
+//! `elements_exc`; the builders hide these differences.
 
 pub mod client;
 pub mod error;

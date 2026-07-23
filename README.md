@@ -166,29 +166,37 @@ let client = MindatClient::builder()
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `countries()` | GET | List all countries |
-| `country(id)` | GET | Get a specific country |
 | `geomaterials(query)` | GET | Search minerals with filters |
 | `geomaterial(id)` | GET | Get a specific geomaterial |
 | `geomaterial_varieties(id)` | GET | Get varieties of a geomaterial |
 | `geomaterials_search(q, size)` | GET | Quick search for geomaterials |
 | `localities(query)` | GET | Search localities with filters |
 | `locality(id)` | GET | Get a specific locality |
-| `locality_ages(page)` | GET | List locality ages |
-| `locality_age(id)` | GET | Get a specific age |
-| `locality_statuses(page)` | GET | List locality statuses |
-| `locality_status(id)` | GET | Get a specific status |
-| `locality_types(page)` | GET | List locality types |
-| `locality_type(id)` | GET | Get a specific type |
-| `minerals_ima(query)` | GET | List IMA-approved minerals |
+| `locality_ages(page)` / `locality_age(id)` | GET | Locality ages |
+| `locality_statuses(page)` / `locality_status(id)` | GET | Locality statuses |
+| `locality_types(page)` / `locality_type(id)` | GET | Locality types |
+| `locality_translations(query)` / `locality_translation(id)` | GET | Locality name translations |
+| `minerals_ima(query)` | GET | **Full search** over IMA-approved minerals (no key) |
 | `mineral_ima(id)` | GET | Get a specific IMA mineral |
-| `dana8_groups()` | GET | Dana 8th ed. classification groups |
-| `dana8_subgroups()` | GET | Dana 8th ed. classification subgroups |
-| `dana8(id)` | GET | Get a specific Dana classification |
-| `strunz10_classes()` | GET | Nickel-Strunz 10th ed. classes |
-| `strunz10_subclasses()` | GET | Nickel-Strunz 10th ed. subclasses |
-| `strunz10_families()` | GET | Nickel-Strunz 10th ed. families |
-| `strunz10(id)` | GET | Get a specific Strunz classification |
+| `references(query)` / `reference(id)` | GET | Bibliographic references |
+| `reference_authors(..)` / `reference_authors_unique(page)` | GET | Reference authors |
+| `reference_citations(query)` / `reference_citation(id)` | GET | Reference citations |
+| `reference_types` / `reference_languages` / `reference_isbn` / `reference_ddc` / `reference_lcc` / `reference_extra` / `reference_classifications` | GET | Reference lookup tables |
+| `occurrences(query)` / `occurrence(id)` | GET | Mineral-at-locality occurrences |
+| `occurrence_statistics(query)` / `occurrence_statistic(id)` | GET | Aggregated occurrence statistics |
+| `loc_by_min(inc, exc)` | GET | Locality IDs by required/excluded minerals |
+| `crystal_classes(query)` / `crystal_class(id)` | GET | Crystal classes (point groups) |
+| `space_groups(query)` / `space_group(id)` | GET | Space groups |
+| `space_group_sets(page)` / `space_group_set(id)` | GET | Space group sets |
+| `relations(query)` / `relation(id)` | GET | Relations between minerals |
+| `geoloc_point` / `geoloc_poly` / `geomin_point` / `geomin_poly` | POST | Geospatial point/polygon queries |
+| `exports()` | GET | Bulk data export links |
+| `dana8_groups()` / `dana8_subgroups()` / `dana8(id)` | GET | Dana 8th ed. classification |
+| `strunz10_classes()` / `strunz10_subclasses()` / `strunz10_families()` / `strunz10(id)` | GET | Nickel-Strunz 10th ed. classification |
+
+> **Note:** The upstream `/countries/`, `/photocount/`, and `/locgeoregion2/`
+> endpoints were removed from the Mindat v1 API. Filter localities by country
+> with `LocalitiesQuery::country("USA")` instead of a countries list.
 
 ## Error Handling
 
@@ -221,7 +229,7 @@ This crate includes an optional GUI application built with [Tauri](https://tauri
 
 - Search minerals by name, elements, or properties
 - Browse IMA-approved minerals (no authentication required)
-- Explore localities and countries
+- Explore localities (filter by country name)
 - View classification systems (Dana-8, Strunz-10)
 - Get detailed mineral information
 

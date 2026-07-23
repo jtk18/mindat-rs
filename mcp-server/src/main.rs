@@ -4,7 +4,7 @@
 //! allowing Claude Desktop and other MCP clients to search for minerals, localities, and more.
 
 use mindat_rs::{
-    models::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery},
+    models::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, ReferencesQuery},
     MindatClient,
 };
 use rmcp::{
@@ -106,12 +106,18 @@ struct GetLocalityRequest {
     id: i32,
 }
 
-/// Request parameters for listing countries
+/// Request parameters for searching references
 #[derive(Debug, Deserialize, JsonSchema)]
-struct ListCountriesRequest {
+struct SearchReferencesRequest {
+    /// Free-text search across references (title, journal, author, etc.)
+    #[serde(default)]
+    query: Option<String>,
     /// Page number (starts at 1)
     #[serde(default)]
     page: Option<i32>,
+    /// Number of results per page
+    #[serde(default)]
+    page_size: Option<i32>,
 }
 
 /// Request parameters for quick search
@@ -334,20 +340,16 @@ impl MindatService {
         let max_lon = req.longitude + delta_lon;
 
         let mut all_results = Vec::new();
-        let mut cursor: Option<String> = None;
         let max_pages = 10; // Limit to avoid timeout
 
-        for _ in 0..max_pages {
-            let mut query = LocalitiesQuery::new();
+        for page in 1..=max_pages {
+            let mut query = LocalitiesQuery::new().page(page);
 
             if let Some(ref country) = req.country {
                 query = query.country(country);
             }
             if let Some(ref name) = req.name_contains {
                 query = query.name_contains(name);
-            }
-            if let Some(ref c) = cursor {
-                query = query.cursor(c);
             }
 
             match client.localities(query).await {
@@ -376,9 +378,7 @@ impl MindatService {
                         }
                     }
 
-                    if let Some(next_cursor) = response.next_cursor() {
-                        cursor = Some(next_cursor);
-                    } else {
+                    if !response.has_next() {
                         break;
                     }
                 }
@@ -414,26 +414,33 @@ impl MindatService {
         }
     }
 
-    /// List all countries in the Mindat database.
-    #[tool(description = "List all countries in the Mindat database with their IDs and ISO codes. Useful for finding the correct country name/code for other searches.")]
-    async fn list_countries(
+    /// Search bibliographic references.
+    #[tool(description = "Search the Mindat literature/reference database by free text (title, journal, author, etc.). Returns bibliographic records. Requires an API key.")]
+    async fn search_references(
         &self,
-        Parameters(req): Parameters<ListCountriesRequest>,
+        Parameters(req): Parameters<SearchReferencesRequest>,
     ) -> String {
         let client = self.client.lock().await;
-        let page = req.page.unwrap_or(1);
+        let mut query = ReferencesQuery::new();
+        if let Some(ref q) = req.query {
+            query = query.search(q);
+        }
+        if let Some(page) = req.page {
+            query = query.page(page);
+        }
+        if let Some(page_size) = req.page_size {
+            query = query.page_size(page_size);
+        }
 
-        match client.countries_page(page).await {
+        match client.references(query).await {
             Ok(response) => {
                 let result = serde_json::json!({
                     "count": response.count,
-                    "page": page,
-                    "total_pages": response.total_pages(20),
                     "results": response.results
                 });
                 serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
             }
-            Err(e) => format!("Error listing countries: {}", e),
+            Err(e) => format!("Error searching references: {}", e),
         }
     }
 
@@ -459,16 +466,6 @@ impl MindatService {
         }
     }
 
-    /// Get photo statistics from Mindat.
-    #[tool(description = "Get statistics about the number of mineral photos in the Mindat database.")]
-    async fn get_photo_count(&self) -> String {
-        let client = self.client.lock().await;
-
-        match client.photocount().await {
-            Ok(count) => serde_json::to_string_pretty(&count).unwrap_or_else(|_| "Error formatting response".to_string()),
-            Err(e) => format!("Error getting photo count: {}", e),
-        }
-    }
 }
 
 #[tool_handler]

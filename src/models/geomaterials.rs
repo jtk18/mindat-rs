@@ -378,10 +378,12 @@ pub struct GeomaterialsQuery {
     pub ima_notes: Option<Vec<ImaNotes>>,
     /// Entry types filter.
     pub entrytype: Option<Vec<u8>>,
-    /// Include elements (comma-separated).
+    /// Include elements (comma-separated); sent as `el_inc`.
     pub elements_inc: Option<String>,
-    /// Exclude elements (comma-separated).
+    /// Exclude elements (comma-separated); sent as `el_exc`.
     pub elements_exc: Option<String>,
+    /// Essential elements (comma-separated); sent as `el_essential`.
+    pub el_essential: Option<String>,
     /// Crystal system filter.
     pub crystal_system: Option<Vec<CrystalSystem>>,
     /// Cleavage type filter.
@@ -432,6 +434,10 @@ pub struct GeomaterialsQuery {
     pub groupid: Option<i32>,
     /// Filter by IDs.
     pub id_in: Option<Vec<i32>>,
+    /// Minimum ID.
+    pub id_min: Option<i32>,
+    /// Maximum ID.
+    pub id_max: Option<i32>,
     /// Include non-UTF names.
     pub non_utf: Option<bool>,
     /// Meteoritical code filter.
@@ -493,6 +499,25 @@ impl GeomaterialsQuery {
     /// Filter by excluded elements.
     pub fn without_elements(mut self, elements: impl Into<String>) -> Self {
         self.elements_exc = Some(elements.into());
+        self
+    }
+
+    /// Filter by essential elements.
+    pub fn essential_elements(mut self, elements: impl Into<String>) -> Self {
+        self.el_essential = Some(elements.into());
+        self
+    }
+
+    /// Filter by a set of geomaterial IDs.
+    pub fn ids(mut self, ids: Vec<i32>) -> Self {
+        self.id_in = Some(ids);
+        self
+    }
+
+    /// Filter by ID range (inclusive).
+    pub fn id_range(mut self, min: i32, max: i32) -> Self {
+        self.id_min = Some(min);
+        self.id_max = Some(max);
         self
     }
 

@@ -27,8 +27,15 @@ impl<T> PaginatedResponse<T> {
     }
 
     /// Returns the total number of pages (if count is available).
+    ///
+    /// Returns `None` if `page_size` is zero or the reported count is negative.
     pub fn total_pages(&self, page_size: usize) -> Option<usize> {
-        self.count.map(|c| (c as usize).div_ceil(page_size))
+        if page_size == 0 {
+            return None;
+        }
+        self.count
+            .filter(|c| *c >= 0)
+            .map(|c| (c as usize).div_ceil(page_size))
     }
 }
 

@@ -54,14 +54,60 @@ pub struct ImaMaterial {
 }
 
 /// Builder for IMA minerals query parameters.
+///
+/// As of the current Mindat API, `/minerals-ima/` is a full search endpoint
+/// (not just a plain list), supporting the same style of filters as
+/// `/geomaterials/` — and it works without an API key.
 #[derive(Debug, Clone, Default)]
 pub struct ImaMineralsQuery {
     /// Search query.
     pub q: Option<String>,
+    /// Name filter (supports `*` and `_` wildcards).
+    pub name: Option<String>,
     /// IMA filter.
     pub ima: Option<i32>,
+    /// Include elements (comma-separated); sent as `el_inc`.
+    pub elements_inc: Option<String>,
+    /// Exclude elements (comma-separated); sent as `el_exc`.
+    pub elements_exc: Option<String>,
+    /// Essential elements (comma-separated); sent as `el_essential`.
+    pub el_essential: Option<String>,
+    /// Colour filter.
+    pub colour: Option<String>,
+    /// Streak filter.
+    pub streak: Option<String>,
+    /// Hardness minimum (Mohs).
+    pub hardness_min: Option<f32>,
+    /// Hardness maximum (Mohs).
+    pub hardness_max: Option<f32>,
+    /// Density minimum.
+    pub density_min: Option<f64>,
+    /// Density maximum.
+    pub density_max: Option<f64>,
+    /// Refractive index minimum.
+    pub ri_min: Option<f32>,
+    /// Refractive index maximum.
+    pub ri_max: Option<f32>,
+    /// Variety of (geomaterial ID).
+    pub varietyof: Option<i32>,
+    /// Synonym of (geomaterial ID).
+    pub synid: Option<i32>,
+    /// Polytype of (geomaterial ID).
+    pub polytypeof: Option<i32>,
+    /// Group ID.
+    pub groupid: Option<i32>,
+    /// Meteoritical code filter.
+    pub meteoritical_code: Option<String>,
+    /// Whether a meteoritical code exists.
+    pub meteoritical_code_exists: Option<bool>,
+    /// Include non-UTF names.
+    pub non_utf: Option<bool>,
     /// Filter by IDs.
     pub id_in: Option<Vec<i32>>,
+    /// Minimum ID.
+    pub id_min: Option<i32>,
+    /// Maximum ID.
+    pub id_max: Option<i32>,
     /// Updated after datetime.
     pub updated_at: Option<String>,
     /// Fields to include.
@@ -85,6 +131,50 @@ impl ImaMineralsQuery {
     /// Search query.
     pub fn search(mut self, q: impl Into<String>) -> Self {
         self.q = Some(q.into());
+        self
+    }
+
+    /// Filter by name (supports `*` and `_` wildcards).
+    pub fn name(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+
+    /// Filter by included elements.
+    pub fn with_elements(mut self, elements: impl Into<String>) -> Self {
+        self.elements_inc = Some(elements.into());
+        self
+    }
+
+    /// Filter by excluded elements.
+    pub fn without_elements(mut self, elements: impl Into<String>) -> Self {
+        self.elements_exc = Some(elements.into());
+        self
+    }
+
+    /// Filter by essential elements.
+    pub fn essential_elements(mut self, elements: impl Into<String>) -> Self {
+        self.el_essential = Some(elements.into());
+        self
+    }
+
+    /// Filter by hardness range (Mohs).
+    pub fn hardness_range(mut self, min: f32, max: f32) -> Self {
+        self.hardness_min = Some(min);
+        self.hardness_max = Some(max);
+        self
+    }
+
+    /// Filter by density range.
+    pub fn density_range(mut self, min: f64, max: f64) -> Self {
+        self.density_min = Some(min);
+        self.density_max = Some(max);
+        self
+    }
+
+    /// Filter by a set of geomaterial IDs.
+    pub fn ids(mut self, ids: Vec<i32>) -> Self {
+        self.id_in = Some(ids);
         self
     }
 

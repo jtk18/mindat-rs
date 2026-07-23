@@ -4,102 +4,106 @@ info:
   version: 1.0.0
   description: Mindat API
 paths:
-  /api-token-auth/:
-    post:
-      operationId: api_token_auth_create
-      tags:
-      - api-token-auth
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AuthToken'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AuthToken'
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthToken'
-        required: true
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthToken'
-          description: ''
-  /countries/:
+  /crystalclasses/:
     get:
-      operationId: countries_list
+      operationId: crystalclasses_list
+      description: Crystal class dictionary
       parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: id_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Filter by a list of Crystalclass IDs (comma separated).
+        explode: false
+        style: form
       - name: page
         required: false
         in: query
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: symbol
+        schema:
+          type: string
+        description: Filter by symbol (case-insensitive).
+      - in: query
+        name: system
+        schema:
+          type: string
+        description: Filter by crystal system (case-insensitive).
       tags:
-      - countries
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedCountriesList'
+                $ref: '#/components/schemas/PaginatedCrystalclassList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedCrystalclassList'
           description: ''
-  /countries/{id}/:
+  /crystalclasses/{id}/:
     get:
-      operationId: countries_retrieve
+      operationId: crystalclasses_retrieve
+      description: Crystal class dictionary
       parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
       - in: path
         name: id
         schema:
           type: integer
-        description: A unique integer value identifying this countries.
+        description: A unique integer value identifying this crystalclass.
         required: true
       tags:
-      - countries
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Countries'
+                $ref: '#/components/schemas/Crystalclass'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Crystalclass'
           description: ''
-  /create/:
-    post:
-      operationId: create_create
-      tags:
-      - create
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
   /dana-8/:
     get:
       operationId: dana_8_retrieve
       description: Disabling default list view, because we are using 'groups' action.
       tags:
-      - dana-8
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -116,11 +120,10 @@ paths:
         description: A unique integer value identifying this dana1.
         required: true
       tags:
-      - dana-8
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -130,11 +133,10 @@ paths:
       description: Endpoint allows Dana 8th edition classifications to be viewed and
         filtered.
       tags:
-      - dana-8
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -144,20 +146,132 @@ paths:
       description: Endpoint allows Dana 8th edition classifications to be viewed and
         filtered.
       tags:
-      - dana-8
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
+  /exports/:
+    get:
+      operationId: export_files_list
+      description: "\n    Returns a list of pre-generated CSV and JSON files,\n  \
+        \  which contain the entire data from the API endpoints, along with metadata\
+        \ about each file, including download URLs.\n    These files can be downloaded\
+        \ directly to extract the full data from the API endpoints without overloading\
+        \ the database with queries.\n    Any additional records added after the date\
+        \ specified in 'date_to' can be downloaded from the Mindat API in the same\
+        \ format.\n    "
+      tags:
+      - Exports
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csv:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        endpoint:
+                          type: string
+                        time_from:
+                          type: string
+                          format: date-time
+                        time_to:
+                          type: string
+                          format: date-time
+                        size:
+                          type: string
+                        url:
+                          type: string
+                          format: uri
+                  json:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        endpoint:
+                          type: string
+                        time_from:
+                          type: string
+                          format: date-time
+                        time_to:
+                          type: string
+                          format: date-time
+                        size:
+                          type: string
+                        url:
+                          type: string
+                          format: uri
+          description: Returns a list of files for CSV and JSON formats, with metadata
+            about each file, including download URLs.
+        '400':
+          description: Invalid request data.
+  /geoloc-point/:
+    post:
+      operationId: geoloc_point_search
+      description: "\n    Returns all localities within the given distance from the\
+        \ point.\n    Example request:\n        {\n          \"point\": {\n      \
+        \      \"lat\": 44.230011,\n            \"lon\": 39.807471\n          },\n\
+        \          \"distance\": \"10km\",\n          \"description\": \"Sample description\"\
+        ,\n          \"txtfull\": \"Detailed text\"\n        }\n    "
+      tags:
+      - Localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+          description: A list of locality IDs matching the polygon search.
+        '400':
+          description: Invalid request data.
+  /geoloc-poly/:
+    post:
+      operationId: geoloc_poly_search
+      description: "\n    Returns all localities within the given polygon\n    Example\
+        \ request:\n        {\n          \"polygon\": {\n            \"type\": \"\
+        Polygon\",\n            \"coordinates\": [\n              [\n            \
+        \    [39.807471, 44.230011],\n                [40.134314, 43.975584],\n  \
+        \              [40.664404, 44.196544],\n                [40.334814, 44.481382],\n\
+        \                [39.807471, 44.230011]\n              ]\n            ]\n\
+        \          },\n          \"description\": \"Sample description\",\n      \
+        \    \"txtfull\": \"Detailed text\"\n        }\n    "
+      tags:
+      - Localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+          description: A list of locality IDs matching the polygon search.
+        '400':
+          description: Invalid request data.
   /geomaterials/:
     get:
       operationId: geomaterials_list
       description: |-
-        View to list Mindat items (minerals, groups, varieties, synonyms, rocks, commodities, etc.)
-        * Requires token or login authentication.
+        The main endpoint for geomaterials table. List or retrieve Mindat geomaterials (minerals, groups, varieties, polytypes, synonyms, rocks, commodities, etc.)
+        The main view for minerals or other geomaterials. * Requires token or login authentication.
       parameters:
       - in: query
         name: bi_max
@@ -237,15 +351,254 @@ paths:
         explode: true
         style: form
       - in: query
-        name: elements_exc
+        name: el_essential
         schema:
-          type: string
-        description: Exclude chemical elements, comma separated string
+          type: boolean
+        description: 'Chemsearch: include essential elements only?'
       - in: query
-        name: elements_inc
+        name: el_exc
         schema:
-          type: string
-        description: Include chemical elements, comma separated string
+          type: array
+          items:
+            type: string
+            enum:
+            - H
+            - Li
+            - Be
+            - B
+            - C
+            - N
+            - O
+            - F
+            - Na
+            - Mg
+            - Al
+            - Si
+            - P
+            - S
+            - Cl
+            - K
+            - Ca
+            - Sc
+            - Ti
+            - V
+            - Cr
+            - Mn
+            - Fe
+            - Co
+            - Ni
+            - Cu
+            - Zn
+            - Ga
+            - Ge
+            - As
+            - Se
+            - Br
+            - Rb
+            - Sr
+            - Y
+            - Zr
+            - Nb
+            - Mo
+            - Ru
+            - Rh
+            - Pd
+            - Ag
+            - Cd
+            - In
+            - Sn
+            - Sb
+            - Te
+            - I
+            - Cs
+            - Ba
+            - La
+            - Ce
+            - Pr
+            - Nd
+            - Sm
+            - Eu
+            - Gd
+            - Tb
+            - Dy
+            - Ho
+            - Er
+            - Tm
+            - Yb
+            - Lu
+            - Hf
+            - Ta
+            - W
+            - Re
+            - Os
+            - Ir
+            - Pt
+            - Au
+            - Hg
+            - Tl
+            - Pb
+            - Bi
+            - Ra
+            - Th
+            - U
+            - '[]'
+            - OH
+            - H2O
+            - H3O
+            - BO3
+            - NH4
+            - NH2
+            - NO3
+            - CO3
+            - PO4
+            - SO4
+            - SO3
+            - AsO4
+            - AsO3
+            - VO4
+            - CrO4
+            - SeO4
+            - SeO3
+            - MoO4
+            - SnOH
+            - SbO4
+            - SbO3
+            - TeO4
+            - TeO3
+            - IO3
+            - WO4
+            - UO2
+            - SiO4
+            - SiO3
+            - Si3O9
+            - CH3COO
+            - HCOO
+            - C2O4
+        description: Exclude minerals containing these elements and ions,comma separated.
+        explode: false
+        style: form
+      - in: query
+        name: el_inc
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - H
+            - Li
+            - Be
+            - B
+            - C
+            - N
+            - O
+            - F
+            - Na
+            - Mg
+            - Al
+            - Si
+            - P
+            - S
+            - Cl
+            - K
+            - Ca
+            - Sc
+            - Ti
+            - V
+            - Cr
+            - Mn
+            - Fe
+            - Co
+            - Ni
+            - Cu
+            - Zn
+            - Ga
+            - Ge
+            - As
+            - Se
+            - Br
+            - Rb
+            - Sr
+            - Y
+            - Zr
+            - Nb
+            - Mo
+            - Ru
+            - Rh
+            - Pd
+            - Ag
+            - Cd
+            - In
+            - Sn
+            - Sb
+            - Te
+            - I
+            - Cs
+            - Ba
+            - La
+            - Ce
+            - Pr
+            - Nd
+            - Sm
+            - Eu
+            - Gd
+            - Tb
+            - Dy
+            - Ho
+            - Er
+            - Tm
+            - Yb
+            - Lu
+            - Hf
+            - Ta
+            - W
+            - Re
+            - Os
+            - Ir
+            - Pt
+            - Au
+            - Hg
+            - Tl
+            - Pb
+            - Bi
+            - Ra
+            - Th
+            - U
+            - '[]'
+            - OH
+            - H2O
+            - H3O
+            - BO3
+            - NH4
+            - NH2
+            - NO3
+            - CO3
+            - PO4
+            - SO4
+            - SO3
+            - AsO4
+            - AsO3
+            - VO4
+            - CrO4
+            - SeO4
+            - SeO3
+            - MoO4
+            - SnOH
+            - SbO4
+            - SbO3
+            - TeO4
+            - TeO3
+            - IO3
+            - WO4
+            - UO2
+            - SiO4
+            - SiO3
+            - Si3O9
+            - CH3COO
+            - HCOO
+            - C2O4
+        description: Include minerals containing these elements and ions, comma separated.
+        explode: false
+        style: form
       - in: query
         name: entrytype
         schema:
@@ -297,6 +650,13 @@ paths:
           type: string
         example: id,longid,guid,name,updttime,mindat_formula,mindat_formula_note,ima_formula,ima_status,ima_notes,varietyof,synid,polytypeof,groupid,entrytype,entrytype_text,description_short,impurities,elements,sigelements,tlform,cim,occurrence,otheroccurrence,industrial,discovery_year,diapheny,cleavage,parting,tenacity,colour,csmetamict,opticalextinction,hmin,hardtype,hmax,vhnmin,vhnmax,vhnerror,vhng,vhns,luminescence,lustre,lustretype,aboutname,other,streak,csystem,cclass,spacegroup,a,b,c,alpha,beta,gamma,aerror,berror,cerror,alphaerror,betaerror,gammaerror,va3,z,dmeas,dmeas2,dcalc,dmeaserror,dcalcerror,cleavagetype,fracturetype,morphology,twinning,epitaxidescription,opticaltype,opticalsign,opticalalpha,opticalbeta,opticalgamma,opticalomega,opticalepsilon,opticalalpha2,opticalbeta2,opticalgamma2,opticalepsilon2,opticalomega2,opticaln,opticaln2,optical2vcalc,optical2vmeasured,optical2vcalc2,optical2vmeasured2,opticalalphaerror,opticalbetaerror,opticalgammaerror,opticalomegaerror,opticalepsilonerror,opticalnerror,optical2vcalcerror,optical2vmeasurederror,opticaldispersion,opticalpleochroism,opticalpleochorismdesc,opticalbirefringence,opticalcomments,opticalcolour,opticalinternal,opticaltropic,opticalanisotropism,opticalbireflectance,opticalr,uv,ir,magnetism,type_specimen_store,commenthard,cim,strunz10ed1,strunz10ed2,strunz10ed3,strunz10ed4,dana8ed1,dana8ed2,dana8ed3,dana8ed4,thermalbehaviour,commentluster,commentbreak,commentdense,commentcrystal,commentcolor,electrical,tranglide,nolocadd,specdispm,spacegroupset,approval_year,publication_year,ima_history,rock_parent,rock_parent2,rock_root,rock_bgs_code,meteoritical_code,key_elements,shortcode_ima,rimin,rimax,weighting,~all,*
       - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
         name: fracturetype
         schema:
           type: array
@@ -333,7 +693,7 @@ paths:
           format: float
         description: Mohs hardness from (hmax>=)
       - in: query
-        name: id__in
+        name: id_in
         schema:
           type: array
           items:
@@ -341,6 +701,16 @@ paths:
         description: Multiple values may be separated by commas.
         explode: false
         style: form
+      - in: query
+        name: id_max
+        schema:
+          type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
+      - in: query
+        name: id_min
+        schema:
+          type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
       - in: query
         name: ima
         schema:
@@ -498,7 +868,7 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: page_size
+      - name: page-size
         required: false
         in: query
         description: Number of results to return per page.
@@ -564,105 +934,55 @@ paths:
         schema:
           type: integer
       tags:
-      - geomaterials
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedMineralListList'
-          description: ''
-  /geomaterials/{id}/:
-    get:
-      operationId: geomaterials_retrieve
-      description: |-
-        View to list Mindat items (minerals, groups, varieties, synonyms, rocks, commodities, etc.)
-        * Requires token or login authentication.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this minerals.
-        required: true
-      tags:
-      - geomaterials
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
+            text/csv:
               schema:
-                $ref: '#/components/schemas/MineralList'
+                $ref: '#/components/schemas/PaginatedMineralListList'
           description: ''
-  /geomaterials/{id}/varieties/:
-    get:
-      operationId: geomaterials_varieties_retrieve
-      description: Action for retrieving the varieties of a specific mineral
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this minerals.
-        required: true
-      tags:
-      - geomaterials
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MineralList'
-          description: ''
-  /geomaterials/dict/:
-    get:
-      operationId: geomaterials_dict_retrieve
-      description: Action for displaying a dictionary of values for a field
-      tags:
-      - geomaterials
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MineralList'
-          description: ''
-  /geomaterials_search/:
+  /geomaterials-search/:
     get:
       operationId: geomaterials_search_list
-      description: Test description for minerals search
+      description: "\n    Returns geomaterials (minerals, etc.) where name contains\
+        \ search term.\n    If exact match is not found, applies fuzzy search returning\
+        \ names with the least levenshtein distance.\n    The fuzzy search algorythm\
+        \ is identical to the search for minerals on Mindat front page.\n    "
       parameters:
+      - in: query
+        name: e
+        schema:
+          type: integer
+        description: Exact. If 1 returns only exact matech
+      - in: query
+        name: ima
+        schema:
+          type: integer
+        description: if 1, returns only ima-approved minerals
       - in: query
         name: q
         schema:
           type: string
+        description: Search term
         required: true
       - in: query
         name: size
         schema:
           type: integer
+        description: Limit of returned records, applicable only if fuzzy search applies,
+          default is 12
       tags:
-      - geomaterials_search
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -670,36 +990,277 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PasscodeResponse'
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    ima_status:
+                      type: string
+                    synid:
+                      type: integer
+          description: A list of minerals matching the search criteria, including
+            their id, name, ima_status, and synonym id.
+        '400':
+          description: Missing callsign
+  /geomaterials/{id}/:
+    get:
+      operationId: geomaterials_retrieve
+      description: |-
+        The main endpoint for geomaterials table. List or retrieve Mindat geomaterials (minerals, groups, varieties, polytypes, synonyms, rocks, commodities, etc.)
+        The main view for minerals or other geomaterials. * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this minerals.
+        required: true
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/MineralList'
           description: ''
+  /geomaterials/{id}/varieties/:
+    get:
+      operationId: geomaterials_varieties_retrieve
+      description: Action for retrieving the varieties of a specific geomaterial
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this minerals.
+        required: true
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/MineralList'
+          description: ''
+  /geomaterials/dict/:
+    get:
+      operationId: geomaterials_dict_retrieve
+      description: Action for displaying a dictionary of values for a field
+      parameters:
+      - in: query
+        name: field
+        schema:
+          type: string
+          enum:
+          - cleavagetype
+          - csystem
+          - diapheny
+          - fracturetype
+          - lustretype
+          - magnetism
+          - opticalpleochroism
+          - opticalsign
+          - opticaltropic
+          - opticaltype
+          - relationship
+          - tenacity
+        description: Field name for which to return dictionary of values.
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+            text/csv:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /geomin-point/:
+    post:
+      operationId: geomin_point_search
+      description: "\n    Returns all minerals found at localities within the given\
+        \ distance from the point.\n    Example request:\n        {\n          \"\
+        point\": {\n            \"lat\": 44.230011,\n            \"lon\": 39.807471\n\
+        \          },\n          \"distance\": \"10km\",\n          \"description\"\
+        : \"Sample description\",\n          \"txtfull\": \"Detailed text\"\n    \
+        \    }\n    "
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+          description: A list of mineral IDs found at localities within the given
+            distance from the point.
+        '400':
+          description: Invalid request data.
+  /geomin-poly/:
+    post:
+      operationId: geomin_poly_search
+      description: "\n    Returns all minerals found at localities matching the polygon\
+        \ search.\n    Example request:\n        {\n          \"polygon\": {\n   \
+        \         \"type\": \"Polygon\",\n            \"coordinates\": [\n       \
+        \       [\n                [39.807471, 44.230011],\n                [40.134314,\
+        \ 43.975584],\n                [40.664404, 44.196544],\n                [40.334814,\
+        \ 44.481382],\n                [39.807471, 44.230011]\n              ]\n \
+        \           ]\n          },\n          \"description\": \"Sample description\"\
+        ,\n          \"txtfull\": \"Detailed text\"\n        }\n    "
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+          description: A list of mineral IDs found at localities matching the polygon
+            search.
+        '400':
+          description: Invalid request data.
+  /loc-by-min/:
+    get:
+      operationId: loc_by_min_search
+      description: "\n    Returns a list of locality IDs that:\n    - Contain all\
+        \ minerals in 'inc' (including varieties).\n    - Do NOT contain any minerals\
+        \ in 'exc' (including varieties).\n    "
+      parameters:
+      - in: query
+        name: exc
+        schema:
+          type: integer
+        description: geomaterials that MUST NOT be present at searched locality, comma
+          separated
+      - in: query
+        name: inc
+        schema:
+          type: integer
+        description: geomaterials that MUST be present at searched locality, comma
+          separated
+        required: true
+      tags:
+      - Localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+          description: A list of locality IDs matching search.
         '400':
           description: Missing callsign
   /localities/:
     get:
       operationId: localities_list
+      description: The main endpoint for localities table. List or retrieve Mindat
+        localities.
       parameters:
       - in: query
         name: country
         schema:
           type: string
           enum:
+          - 162173 Ryugu
+          - Abkhazia
+          - Aegean Sea Plate
           - Afghanistan
+          - Africa
+          - African Plate
+          - Akrotiri and Dhekelia
           - Albania
           - Algeria
-          - American Samoa
+          - Altiplano Plate
+          - Amur Plate
+          - Anatolia Plate
+          - Andaman Sea
           - Andorra
           - Angola
           - Anguilla
+          - Antarctic Meteorites
+          - Antarctic Plate
+          - Antarctica
           - Antigua and Barbuda
+          - Arabian Peninsula
+          - Arabian Plate
+          - Arctic Ocean
           - Argentina
+          - Argentina/Chile
           - Armenia
           - Aruba
-          - Ashmore and Cartier Islands
+          - Asia
+          - Atlantic Ocean
           - Australia
+          - Australian Plate
           - Austria
+          - Austria/Switzerland
           - Azerbaijan
           - Bahamas
-          - Bahrain
+          - Bailiwick of Guernsey
+          - Balmoral Reef Microplate
+          - Baltic Sea
+          - Baltic Shield (Fennoscandian Shield)
+          - Banda Sea Plate
           - Bangladesh
           - Barbados
           - Belarus
@@ -708,94 +1269,136 @@ paths:
           - Benin
           - Bermuda
           - Bhutan
+          - Birds Head Plate
           - Bolivia
-          - Bosnia And Herzegovina
+          - Borneo
+          - Bosnia and Herzegovina
           - Botswana
-          - Bouvet Island
           - Brazil
-          - British Indian Ocean Territories
-          - British Solomon Islands
           - British Virgin Islands
+          - British and Irish Isles
           - Brunei
           - Bulgaria
           - Burkina Faso
+          - Burma Plate
           - Burundi
           - Cambodia
           - Cameroon
           - Canada
           - Cape Verde
+          - Caribbean Netherlands
+          - Caribbean Plate
+          - Caroline Plate
+          - Caucasus
           - Cayman Islands
+          - Central Africa
           - Central African Republic
+          - Central America
+          - Central Asia
+          - Ceres
           - Chad
+          - Channel Islands
+          - Charon
           - Chile
           - China
-          - Christmas Island
-          - Cocos Islands
+          - Cocos Plate
           - Colombia
           - Comoro Islands
+          - Comoros
+          - Conway Reef Microplate
           - Cook Islands
           - Costa Rica
           - Croatia
           - Cuba
+          - Curaçao
           - Cyprus
           - Czech Republic
-          - Democratic Republic of the Congo
+          - Czech Republic/Germany/Poland
+          - Czech Republic/Poland
+          - Czechoslovakia
+          - DR Congo
+          - Dead Sea
           - Denmark
           - Djibouti
           - Dominica
           - Dominican Republic
+          - Earth
           - East Timor
+          - Easter Microplate
           - Ecuador
           - Egypt
           - El Salvador
           - Equatorial Guinea
+          - Eritrea
           - Estonia
+          - Eswatini
           - Ethiopia
-          - Faeroe Islands
+          - Eurasian Plate
+          - Europa
+          - Europe
           - Falkland Islands
+          - Faroe Islands
           - Federated States of Micronesia
           - Fiji
           - Finland
+          - Finland/Russia
           - France
-          - French Guiana
           - French Polynesia
+          - French Southern and Antarctic Lands
+          - Futuna Plate
           - Gabon
+          - Galápagos Microplate
           - Gambia
           - Georgia
           - Germany
+          - Germany/Belgium
+          - Germany/Czech Republic
+          - Germany/Poland
           - Ghana
           - Gibraltar
+          - Greater Caucasus Mountain Range
           - Greece
           - Greenland
           - Grenada
-          - Guadeloupe
-          - Guam
           - Guatemala
-          - Guernsey
           - Guinea
           - Guinea-Bissau
           - Guyana
           - Haiti
+          - Hans Island
           - Honduras
-          - Hong Kong
           - Hungary
+          - Iberian Peninsula
           - Iceland
+          - Ilemi Triangle
           - India
+          - Indian Ocean
+          - Indian Plate
+          - Indian Plate (India Plate)
           - Indonesia
+          - Io
           - Iran
           - Iraq
           - Ireland
+          - Ireland (island)
+          - Island of Cyprus
           - Isle of Man
           - Israel
           - Italy
-          - Ivory Coast (Côte d'Ivoire)
+          - Ivory Coast
           - Jamaica
           - Japan
           - Jersey
           - Jordan
+          - Juan Fernández Microplate
+          - Juan de Fuca Plate
           - Kazakhstan
+          - Kazakhstan/Russia
           - Kenya
-          - 'Kiribati '
+          - Kingdom of the Netherlands
+          - Kiribati
+          - Korea
+          - Korean Peninsula
           - Kosovo
           - Kuwait
           - Kyrgyzstan
@@ -803,23 +1406,32 @@ paths:
           - Latvia
           - Lebanon
           - Lesotho
+          - Lesser Caucasus Mountain Range
           - Liberia
           - Libya
           - Liechtenstein
           - Lithuania
           - Luxembourg
-          - Macao
           - Madagascar
           - Malawi
+          - Malawi/Mozambique/Tanzania
           - Malaysia
           - Maldives
           - Mali
           - Malta
-          - Martinique
+          - Manus Microplate
+          - Maoke Plate
+          - Mariana Plate
+          - Mars
+          - Marshall Islands
           - Mauritania
           - Mauritius
+          - Mercury
           - Mexico
+          - Middle East
+          - Mimas
           - Moldova
+          - Molucca Sea Plate
           - Monaco
           - Mongolia
           - Montenegro
@@ -829,94 +1441,149 @@ paths:
           - Myanmar
           - Namibia
           - Nauru
+          - Nazca Plate
           - Nepal
           - Netherlands
           - Netherlands Antilles
-          - New Caledonia
+          - New Guinea
+          - New Hebrides Plate
           - New Zealand
           - Nicaragua
           - Niger
           - Nigeria
+          - Niuafo'ou Plate
+          - Niue
+          - North Africa
+          - North America
+          - North America Plate
+          - North Andes Plate
+          - North Atlantic Igneous Province
+          - North Bismarck Plate
           - North Korea
+          - North Macedonia
+          - North Sea
+          - Northern Cyprus
+          - Northern Mariana Islands
+          - Northwest Africa
+          - Northwest Africa Meteorites
           - Norway
+          - Okhotsk Plate
+          - Okinawa Plate
           - Oman
+          - Outer Space
+          - Pacific Ocean
+          - Pacific Plate
           - Pakistan
+          - Palau
+          - Palestine
           - Panama
+          - Panama Plate
           - Papua New Guinea
           - Paraguay
+          - Persian Gulf
           - Peru
+          - Philippine Sea Plate
           - Philippines
+          - Phobos
+          - Pitcairn Islands
+          - Pluto
           - Poland
           - Portugal
-          - Puerto Rico
           - Qatar
-          - Republic of Congo (Brazzaville)
-          - Republic of Macedonia
-          - Reunion Island
+          - Red Sea
+          - Republic of the Congo
+          - Rivera Plate
           - Romania
           - Russia
           - Rwanda
-          - Saint Helena
-          - 'Saint Lucia '
+          - Réunion Island
+          - Saint Helena， Ascension and Tristan da Cunha
+          - Saint Kitts and Nevis
+          - Saint Lucia
+          - Saint Martin
           - Saint Vincent and the Grenadines
+          - Samoa
+          - Samoan Islands
           - San Marino
-          - Sao Tome And Principe
+          - Sandwich Plate
           - Saudi Arabia
+          - Scandinavia
+          - Scotia Plate
           - Senegal
           - Serbia
+          - Serbia and Montenegro
           - Seychelles
+          - Shetland Plate
           - Sierra Leone
           - Singapore
+          - Sint Maarten
           - Slovakia
           - Slovenia
           - Solomon Islands
+          - Solomon Sea Plate
+          - Somali Plate
           - Somalia
           - South Africa
+          - South America
+          - South America Plate
+          - South Bismarck Plate
+          - South China Sea
+          - South Georgia and the South Sandwich Islands
           - South Korea
+          - South Ossetia
+          - South Sudan
+          - Southern Africa
+          - Soviet Union (1922-1991)
           - Spain
           - Sri Lanka
-          - St Christopher-Nevis Islands
           - Sudan
+          - Sunda Plate
           - Suriname
           - Swaziland
           - Sweden
           - Switzerland
           - Syria
+          - São Tomé and Príncipe
           - Taiwan
           - Tajikistan
           - Tanzania
           - Thailand
+          - The Caribbean
+          - The Moon
+          - Timor Plate
           - Togo
           - Tonga
-          - Trinidad And Tobago
+          - Tonga Plate
+          - Trinidad and Tobago
+          - Triton
           - Tunisia
+          - Turkestan
           - Turkey
           - Turkmenistan
-          - Turks And Caicos Islands
+          - Turks and Caicos Islands
           - Tuvalu
           - U.S. Virgin Islands
+          - UK
+          - USA
           - Uganda
           - Ukraine
           - United Arab Emirates
-          - United Kingdom
-          - United States
+          - United States Minor Outlying Islands
           - Uruguay
           - Uzbekistan
-          - 'Vanuatu (Republic of Vanuatu; New Hebrides) '
+          - Vanuatu
           - Venezuela
+          - Venus
           - Vietnam
+          - West Africa
           - Western Sahara
-          - Western Samoa
+          - Woodlark Plate
+          - Yangtze Plate
+          - Yellow Sea
           - Yemen
           - Zambia
           - Zimbabwe
-        description: Country name (e.g. Brazil)
-      - name: cursor
-        required: false
-        in: query
-        description: The pagination cursor value.
-        schema:
-          type: string
+        description: Country or top level parent name (e.g. Brazil)
       - in: query
         name: description
         schema:
@@ -954,9 +1621,9 @@ paths:
         schema:
           title: Selected fields
           type: string
-        example: id,longid,guid,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
+        example: id,longid,guid,locality_type,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,sublocs,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
       - in: query
-        name: id__in
+        name: id_in
         schema:
           type: array
           items:
@@ -964,6 +1631,21 @@ paths:
         description: Multiple values may be separated by commas.
         explode: false
         style: form
+      - in: query
+        name: level_gte
+        schema:
+          type: integer
+        description: Hierarchy level >= value
+      - in: query
+        name: level_lte
+        schema:
+          type: integer
+        description: Hierarchy level <= value
+      - in: query
+        name: non_hierarchial
+        schema:
+          type: boolean
+        description: Non-hierarchical locality flag (boolean, maps to [0,1])
       - name: omit
         required: false
         in: query
@@ -971,7 +1653,34 @@ paths:
         schema:
           title: Omitted fields
           type: string
-        example: id,longid,guid,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
+        example: id,longid,guid,locality_type,txt,revtxtd,description_short,latitude,longitude,langtxt,dateadd,datemodify,elements,country,refs,coordsystem,parent,sublocs,links,area,non_hierarchical,age,meteorite_type,company,company2,loc_status,loc_group,status_year,company_year,discovered_before,discovery_year,discovery_year_type,level,locsinclude,locsexclude,wikipedia,osmid,geonames,timestamp,~all,*
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: revtxtd_istartswith
+        schema:
+          type: string
+        description: Reverse locality name begins with
+      - in: query
+        name: sublocs_gte
+        schema:
+          type: integer
+        description: Sublocalities count >= value
+      - in: query
+        name: sublocs_lte
+        schema:
+          type: integer
+        description: Sublocalities count <= value
       - in: query
         name: txt
         schema:
@@ -984,11 +1693,10 @@ paths:
           format: date-time
         description: Last updated datetime >= input value. Format %Y-%m-%d %H:%M:%S
       tags:
-      - localities
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -999,7 +1707,377 @@ paths:
   /localities/{id}/:
     get:
       operationId: localities_retrieve
+      description: The main endpoint for localities table. List or retrieve Mindat
+        localities.
       parameters:
+      - in: query
+        name: country
+        schema:
+          type: string
+          enum:
+          - 162173 Ryugu
+          - Abkhazia
+          - Aegean Sea Plate
+          - Afghanistan
+          - Africa
+          - African Plate
+          - Akrotiri and Dhekelia
+          - Albania
+          - Algeria
+          - Altiplano Plate
+          - Amur Plate
+          - Anatolia Plate
+          - Andaman Sea
+          - Andorra
+          - Angola
+          - Anguilla
+          - Antarctic Meteorites
+          - Antarctic Plate
+          - Antarctica
+          - Antigua and Barbuda
+          - Arabian Peninsula
+          - Arabian Plate
+          - Arctic Ocean
+          - Argentina
+          - Argentina/Chile
+          - Armenia
+          - Aruba
+          - Asia
+          - Atlantic Ocean
+          - Australia
+          - Australian Plate
+          - Austria
+          - Austria/Switzerland
+          - Azerbaijan
+          - Bahamas
+          - Bailiwick of Guernsey
+          - Balmoral Reef Microplate
+          - Baltic Sea
+          - Baltic Shield (Fennoscandian Shield)
+          - Banda Sea Plate
+          - Bangladesh
+          - Barbados
+          - Belarus
+          - Belgium
+          - Belize
+          - Benin
+          - Bermuda
+          - Bhutan
+          - Birds Head Plate
+          - Bolivia
+          - Borneo
+          - Bosnia and Herzegovina
+          - Botswana
+          - Brazil
+          - British Virgin Islands
+          - British and Irish Isles
+          - Brunei
+          - Bulgaria
+          - Burkina Faso
+          - Burma Plate
+          - Burundi
+          - Cambodia
+          - Cameroon
+          - Canada
+          - Cape Verde
+          - Caribbean Netherlands
+          - Caribbean Plate
+          - Caroline Plate
+          - Caucasus
+          - Cayman Islands
+          - Central Africa
+          - Central African Republic
+          - Central America
+          - Central Asia
+          - Ceres
+          - Chad
+          - Channel Islands
+          - Charon
+          - Chile
+          - China
+          - Cocos Plate
+          - Colombia
+          - Comoro Islands
+          - Comoros
+          - Conway Reef Microplate
+          - Cook Islands
+          - Costa Rica
+          - Croatia
+          - Cuba
+          - Curaçao
+          - Cyprus
+          - Czech Republic
+          - Czech Republic/Germany/Poland
+          - Czech Republic/Poland
+          - Czechoslovakia
+          - DR Congo
+          - Dead Sea
+          - Denmark
+          - Djibouti
+          - Dominica
+          - Dominican Republic
+          - Earth
+          - East Timor
+          - Easter Microplate
+          - Ecuador
+          - Egypt
+          - El Salvador
+          - Equatorial Guinea
+          - Eritrea
+          - Estonia
+          - Eswatini
+          - Ethiopia
+          - Eurasian Plate
+          - Europa
+          - Europe
+          - Falkland Islands
+          - Faroe Islands
+          - Federated States of Micronesia
+          - Fiji
+          - Finland
+          - Finland/Russia
+          - France
+          - French Polynesia
+          - French Southern and Antarctic Lands
+          - Futuna Plate
+          - Gabon
+          - Galápagos Microplate
+          - Gambia
+          - Georgia
+          - Germany
+          - Germany/Belgium
+          - Germany/Czech Republic
+          - Germany/Poland
+          - Ghana
+          - Gibraltar
+          - Greater Caucasus Mountain Range
+          - Greece
+          - Greenland
+          - Grenada
+          - Guatemala
+          - Guinea
+          - Guinea-Bissau
+          - Guyana
+          - Haiti
+          - Hans Island
+          - Honduras
+          - Hungary
+          - Iberian Peninsula
+          - Iceland
+          - Ilemi Triangle
+          - India
+          - Indian Ocean
+          - Indian Plate
+          - Indian Plate (India Plate)
+          - Indonesia
+          - Io
+          - Iran
+          - Iraq
+          - Ireland
+          - Ireland (island)
+          - Island of Cyprus
+          - Isle of Man
+          - Israel
+          - Italy
+          - Ivory Coast
+          - Jamaica
+          - Japan
+          - Jersey
+          - Jordan
+          - Juan Fernández Microplate
+          - Juan de Fuca Plate
+          - Kazakhstan
+          - Kazakhstan/Russia
+          - Kenya
+          - Kingdom of the Netherlands
+          - Kiribati
+          - Korea
+          - Korean Peninsula
+          - Kosovo
+          - Kuwait
+          - Kyrgyzstan
+          - Laos
+          - Latvia
+          - Lebanon
+          - Lesotho
+          - Lesser Caucasus Mountain Range
+          - Liberia
+          - Libya
+          - Liechtenstein
+          - Lithuania
+          - Luxembourg
+          - Madagascar
+          - Malawi
+          - Malawi/Mozambique/Tanzania
+          - Malaysia
+          - Maldives
+          - Mali
+          - Malta
+          - Manus Microplate
+          - Maoke Plate
+          - Mariana Plate
+          - Mars
+          - Marshall Islands
+          - Mauritania
+          - Mauritius
+          - Mercury
+          - Mexico
+          - Middle East
+          - Mimas
+          - Moldova
+          - Molucca Sea Plate
+          - Monaco
+          - Mongolia
+          - Montenegro
+          - Montserrat
+          - Morocco
+          - Mozambique
+          - Myanmar
+          - Namibia
+          - Nauru
+          - Nazca Plate
+          - Nepal
+          - Netherlands
+          - Netherlands Antilles
+          - New Guinea
+          - New Hebrides Plate
+          - New Zealand
+          - Nicaragua
+          - Niger
+          - Nigeria
+          - Niuafo'ou Plate
+          - Niue
+          - North Africa
+          - North America
+          - North America Plate
+          - North Andes Plate
+          - North Atlantic Igneous Province
+          - North Bismarck Plate
+          - North Korea
+          - North Macedonia
+          - North Sea
+          - Northern Cyprus
+          - Northern Mariana Islands
+          - Northwest Africa
+          - Northwest Africa Meteorites
+          - Norway
+          - Okhotsk Plate
+          - Okinawa Plate
+          - Oman
+          - Outer Space
+          - Pacific Ocean
+          - Pacific Plate
+          - Pakistan
+          - Palau
+          - Palestine
+          - Panama
+          - Panama Plate
+          - Papua New Guinea
+          - Paraguay
+          - Persian Gulf
+          - Peru
+          - Philippine Sea Plate
+          - Philippines
+          - Phobos
+          - Pitcairn Islands
+          - Pluto
+          - Poland
+          - Portugal
+          - Qatar
+          - Red Sea
+          - Republic of the Congo
+          - Rivera Plate
+          - Romania
+          - Russia
+          - Rwanda
+          - Réunion Island
+          - Saint Helena， Ascension and Tristan da Cunha
+          - Saint Kitts and Nevis
+          - Saint Lucia
+          - Saint Martin
+          - Saint Vincent and the Grenadines
+          - Samoa
+          - Samoan Islands
+          - San Marino
+          - Sandwich Plate
+          - Saudi Arabia
+          - Scandinavia
+          - Scotia Plate
+          - Senegal
+          - Serbia
+          - Serbia and Montenegro
+          - Seychelles
+          - Shetland Plate
+          - Sierra Leone
+          - Singapore
+          - Sint Maarten
+          - Slovakia
+          - Slovenia
+          - Solomon Islands
+          - Solomon Sea Plate
+          - Somali Plate
+          - Somalia
+          - South Africa
+          - South America
+          - South America Plate
+          - South Bismarck Plate
+          - South China Sea
+          - South Georgia and the South Sandwich Islands
+          - South Korea
+          - South Ossetia
+          - South Sudan
+          - Southern Africa
+          - Soviet Union (1922-1991)
+          - Spain
+          - Sri Lanka
+          - Sudan
+          - Sunda Plate
+          - Suriname
+          - Swaziland
+          - Sweden
+          - Switzerland
+          - Syria
+          - São Tomé and Príncipe
+          - Taiwan
+          - Tajikistan
+          - Tanzania
+          - Thailand
+          - The Caribbean
+          - The Moon
+          - Timor Plate
+          - Togo
+          - Tonga
+          - Tonga Plate
+          - Trinidad and Tobago
+          - Triton
+          - Tunisia
+          - Turkestan
+          - Turkey
+          - Turkmenistan
+          - Turks and Caicos Islands
+          - Tuvalu
+          - U.S. Virgin Islands
+          - UK
+          - USA
+          - Uganda
+          - Ukraine
+          - United Arab Emirates
+          - United States Minor Outlying Islands
+          - Uruguay
+          - Uzbekistan
+          - Vanuatu
+          - Venezuela
+          - Venus
+          - Vietnam
+          - West Africa
+          - Western Sahara
+          - Woodlark Plate
+          - Yangtze Plate
+          - Yellow Sea
+          - Yemen
+          - Zambia
+          - Zimbabwe
+        description: Country or top level parent name (e.g. Brazil)
       - in: path
         name: id
         schema:
@@ -1007,11 +2085,10 @@ paths:
         description: A unique integer value identifying this localities.
         required: true
       tags:
-      - localities
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1019,7 +2096,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Locality'
           description: ''
-  /locality_age/:
+  /locality-age/:
     get:
       operationId: locality_age_list
       parameters:
@@ -1030,11 +2107,10 @@ paths:
         schema:
           type: integer
       tags:
-      - locality_age
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1042,7 +2118,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAgeList'
           description: ''
-  /locality_age/{age_id}/:
+  /locality-age/{age_id}/:
     get:
       operationId: locality_age_retrieve
       parameters:
@@ -1053,11 +2129,10 @@ paths:
         description: A unique integer value identifying this age.
         required: true
       tags:
-      - locality_age
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1065,7 +2140,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Age'
           description: ''
-  /locality_status/:
+  /locality-status/:
     get:
       operationId: locality_status_list
       parameters:
@@ -1076,11 +2151,10 @@ paths:
         schema:
           type: integer
       tags:
-      - locality_status
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1088,7 +2162,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedLocstatusList'
           description: ''
-  /locality_status/{ls_id}/:
+  /locality-status/{ls_id}/:
     get:
       operationId: locality_status_retrieve
       parameters:
@@ -1099,11 +2173,10 @@ paths:
         description: A unique integer value identifying this locstatus.
         required: true
       tags:
-      - locality_status
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1111,7 +2184,117 @@ paths:
               schema:
                 $ref: '#/components/schemas/Locstatus'
           description: ''
-  /locality_type/:
+  /locality-translations/:
+    get:
+      operationId: locality_translations_list
+      description: Endpoint for locality translations stored in the locality_translate
+        table.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: lt_datetime_gte
+        schema:
+          type: string
+          format: date-time
+        description: Translation datetime >= input value. Format %Y-%m-%d %H:%M:%S
+      - in: query
+        name: lt_important
+        schema:
+          type: integer
+        description: Important flag
+      - in: query
+        name: lt_iso
+        schema:
+          type: string
+        description: Language code (lt_iso)
+      - in: query
+        name: lt_loc
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: lt_text
+        schema:
+          type: string
+        description: Translated text contains
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - Localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocalityTranslateList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocalityTranslateList'
+          description: ''
+  /locality-translations/{lt_id}/:
+    get:
+      operationId: locality_translations_retrieve
+      description: Endpoint for locality translations stored in the locality_translate
+        table.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: lt_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this locality translate.
+        required: true
+      tags:
+      - Localities
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalityTranslate'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/LocalityTranslate'
+          description: ''
+  /locality-type/:
     get:
       operationId: locality_type_list
       parameters:
@@ -1122,11 +2305,10 @@ paths:
         schema:
           type: integer
       tags:
-      - locality_type
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1134,7 +2316,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedLoctypesList'
           description: ''
-  /locality_type/{lt_id}/:
+  /locality-type/{lt_id}/:
     get:
       operationId: locality_type_retrieve
       parameters:
@@ -1145,11 +2327,10 @@ paths:
         description: A unique integer value identifying this loctypes.
         required: true
       tags:
-      - locality_type
+      - Localities
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1157,54 +2338,128 @@ paths:
               schema:
                 $ref: '#/components/schemas/Loctypes'
           description: ''
-  /locgeoregion2/:
-    get:
-      operationId: locgeoregion2_list
-      parameters:
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      tags:
-      - locgeoregion2
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedLocGeoregionList'
-          description: ''
-  /locobject/{id}/:
-    get:
-      operationId: locobject_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - locobject
-      security:
-      - tokenAuth: []
-      - tokenAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /minerals_ima/:
+  /minerals-ima/:
     get:
       operationId: minerals_ima_list
       description: |-
-        View to list IMA approved mineral species.
+        The endpoint to list IMA-approved minerals (which are a subset of Mindat geomaterials).
         * Requires no authentication.
       parameters:
+      - in: query
+        name: bi_max
+        schema:
+          type: string
+        description: 'Birifrigence. Range: bi_min - bi_max. Birifrigence is calculated
+          from refractive index as (rimax-rimin)'
+      - in: query
+        name: bi_min
+        schema:
+          type: string
+        description: 'Birifrigence. Range: bi_min - bi_max. Birifrigence is calculated
+          from refractive index as (rimax-rimin)'
+      - in: query
+        name: cleavagetype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Distinct/Good
+            - Imperfect/Fair
+            - None Observed
+            - Perfect
+            - Poor/Indistinct
+            - Very Good
+        description: 'Cleavage: multiple choice'
+        explode: true
+        style: form
+      - in: query
+        name: colour
+        schema:
+          type: string
+      - in: query
+        name: crystal_system
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Amorphous
+            - Hexagonal
+            - Icosahedral
+            - Isometric
+            - Monoclinic
+            - Orthorhombic
+            - Tetragonal
+            - Triclinic
+            - Trigonal
+        description: 'Crystal system (csystem): multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: density_max
+        schema:
+          type: number
+        description: Density measured, to (dmeas<=)
+      - in: query
+        name: density_min
+        schema:
+          type: number
+        description: Density measured, from (dmeas2>=)
+      - in: query
+        name: diapheny
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Opaque
+            - Translucent
+            - Transparent
+        description: 'Diapheny (transparency): multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: el_essential
+        schema:
+          type: boolean
+        description: 'Chemsearch: include essential elements only?'
+      - in: query
+        name: el_exc
+        schema:
+          type: string
+        description: 'Chemsearch: exclude elements or groups, comma separated'
+      - in: query
+        name: el_inc
+        schema:
+          type: string
+        description: 'Chemsearch: include elements or groups, comma separated'
+      - in: query
+        name: entrytype
+        schema:
+          type: array
+          items:
+            type: integer
+            enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+        description: 'Entry type. Multiple choice. Values: </br> <pre style=''white-space:
+          pre-wrap;''>0 - <b>mineral</b> </br>1 - <b>synonym</b> </br>2 - <b>variety</b>
+          </br>3 - <b>mixture</b> </br>4 - <b>series</b> </br>5 - <b>grouplist</b>
+          </br>6 - <b>polytype</b> </br>7 - <b>rock</b> </br>8 - <b>commodity</b>
+          </br></pre>'
+        explode: true
+        style: form
       - name: expand
         required: false
         in: query
@@ -1228,7 +2483,43 @@ paths:
           type: string
         example: id,name,ima_formula,ima_symbol,ima_year,discovery_year,ima_status,ima_notes,type_specimen_store,mindat_longid,mindat_guid,type_localities,description_short,mindat_formula,mindat_formula_note,~all,*
       - in: query
-        name: id__in
+        name: fracturetype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Conchoidal
+            - Fibrous
+            - Hackly
+            - Irregular/Uneven
+            - Micaceous
+            - None observed
+            - Splintery
+            - Step-Like
+            - Sub-Conchoidal
+        description: 'Fracture: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: groupid
+        schema:
+          type: integer
+      - in: query
+        name: hardness_max
+        schema:
+          type: number
+          format: float
+        description: Mohs hardness to (hmin<=)
+      - in: query
+        name: hardness_min
+        schema:
+          type: number
+          format: float
+        description: Mohs hardness from (hmax>=)
+      - in: query
+        name: id_in
         schema:
           type: array
           items:
@@ -1237,9 +2528,110 @@ paths:
         explode: false
         style: form
       - in: query
-        name: ima
+        name: id_max
         schema:
           type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
+      - in: query
+        name: id_min
+        schema:
+          type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
+      - in: query
+        name: ima
+        schema:
+          type: boolean
+        description: Include IMA-approved names only (true) / exclude IMA-approved
+          (false)
+      - in: query
+        name: ima_notes
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            format: int64
+            nullable: true
+            enum:
+            - GROUP
+            - INTERMEDIATE
+            - NAMED_AMPHIBOLE
+            - PENDING_APPROVAL
+            - PUBLISHED_WITHOUT_APPROVAL
+            - REDEFINED
+            - REJECTED
+            - RENAMED
+            - UNNAMED_INVALID
+            - UNNAMED_VALID
+        description: 'Ima notes: multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: ima_status
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            format: int64
+            nullable: true
+            enum:
+            - APPROVED
+            - DISCREDITED
+            - GRANDFATHERED
+            - PENDING_PUBLICATION
+            - QUESTIONABLE
+        description: 'Ima status: multiple choice (OR)'
+        explode: true
+        style: form
+      - in: query
+        name: lustretype
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - Adamantine
+            - Dull
+            - Earthy
+            - Greasy
+            - Metallic
+            - Pearly
+            - Resinous
+            - Silky
+            - Sub-Adamantine
+            - Sub-Metallic
+            - Sub-Vitreous
+            - Vitreous
+            - Waxy
+        description: 'Lustretype: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
+        name: meteoritical_code
+        schema:
+          type: string
+        description: Meteoritical code. Text search supporting * and _ as wildcards
+      - in: query
+        name: meteoritical_code_exists
+        schema:
+          type: boolean
+        description: Meteoritical code exists. Include non-empty (true) / include
+          empty only (false)
+      - in: query
+        name: name
+        schema:
+          type: string
+        description: 'Name. Text search supporting * and _ as wildcards, e.g. "qu_rtz",
+          "bario*" '
+      - in: query
+        name: non_utf
+        schema:
+          type: boolean
+        description: Include non-UTF mineral names?
       - name: omit
         required: false
         in: query
@@ -1248,16 +2640,50 @@ paths:
           title: Omitted fields
           type: string
         example: id,name,ima_formula,ima_symbol,ima_year,discovery_year,ima_status,ima_notes,type_specimen_store,mindat_longid,mindat_guid,type_localities,description_short,mindat_formula,mindat_formula_note,~all,*
+      - in: query
+        name: optical2v_max
+        schema:
+          type: string
+        description: '2V. Range: optical2v_min - optical2v_max'
+      - in: query
+        name: optical2v_min
+        schema:
+          type: string
+        description: '2V. Range: optical2v_min - optical2v_max'
+      - in: query
+        name: opticalsign
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - +
+          - +/-
+          - '-'
+        description: 'Optical sign: single choice'
+      - in: query
+        name: opticaltype
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - Biaxial
+          - Isotropic
+          - Uniaxial
+        description: 'Optical type: single choice'
       - name: page
         required: false
         in: query
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: page_size
+      - name: page-size
         required: false
         in: query
         description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: polytypeof
         schema:
           type: integer
       - name: q
@@ -1267,17 +2693,59 @@ paths:
         schema:
           type: string
       - in: query
+        name: ri_max
+        schema:
+          type: number
+          format: float
+        description: Refractive index, to (rimin<=)
+      - in: query
+        name: ri_min
+        schema:
+          type: number
+          format: float
+        description: Refractive index, from (rimax>=)
+      - in: query
+        name: streak
+        schema:
+          type: string
+      - in: query
+        name: synid
+        schema:
+          type: integer
+      - in: query
+        name: tenacity
+        schema:
+          type: array
+          items:
+            type: string
+            nullable: true
+            enum:
+            - brittle
+            - elastic
+            - flexible
+            - fragile
+            - malleable
+            - sectile
+            - very brittle
+            - waxy
+        description: 'Tenacity: multiple choice (AND)'
+        explode: true
+        style: form
+      - in: query
         name: updated_at
         schema:
           type: string
           format: date-time
         description: Last updated datetime in format %Y-%m-%d %H:%M:%S
+      - in: query
+        name: varietyof
+        schema:
+          type: integer
       tags:
-      - minerals_ima
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1285,11 +2753,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedIMAMineralListList'
           description: ''
-  /minerals_ima/{id}/:
+  /minerals-ima/{id}/:
     get:
       operationId: minerals_ima_retrieve
       description: |-
-        View to list IMA approved mineral species.
+        The endpoint to list IMA-approved minerals (which are a subset of Mindat geomaterials).
         * Requires no authentication.
       parameters:
       - in: path
@@ -1299,11 +2767,10 @@ paths:
         description: A unique integer value identifying this minerals.
         required: true
       tags:
-      - minerals_ima
+      - Geomaterials
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           content:
@@ -1316,11 +2783,10 @@ paths:
       operationId: nickel_strunz_10_retrieve
       description: Disabling default list view, because we are using 'classes' action.
       tags:
-      - nickel-strunz-10
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -1339,11 +2805,10 @@ paths:
         description: A unique integer value identifying this strunz10 ed1.
         required: true
       tags:
-      - nickel-strunz-10
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -1355,11 +2820,10 @@ paths:
         Currently, it lists counts of minerals in each class, subclass and family.
         Feel free to improve or add more filters.
       tags:
-      - nickel-strunz-10
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -1371,11 +2835,10 @@ paths:
         Currently, it lists counts of minerals in each class, subclass and family.
         Feel free to improve or add more filters.
       tags:
-      - nickel-strunz-10
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
@@ -1387,26 +2850,2017 @@ paths:
         Currently, it lists counts of minerals in each class, subclass and family.
         Feel free to improve or add more filters.
       tags:
-      - nickel-strunz-10
+      - Geomaterials classifications
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
           description: No response body
-  /photocount/:
+  /occurrences/:
     get:
-      operationId: photocount_retrieve
+      operationId: occurrences_list
+      description: |-
+        The main endpoint for occurrences. List or retrieve occurrences.
+        An occurrence is a record of specific geomaterial (mineral, etc) at a specific locality.
+      parameters:
+      - in: query
+        name: cfmethods
+        schema:
+          type: string
+        description: Analysis method (contains text)
+      - in: query
+        name: cfref
+        schema:
+          type: string
+        description: Analysis text (contains text)
+      - in: query
+        name: colour
+        schema:
+          type: string
+        description: Colour (contains text)
+      - in: query
+        name: datemodify_after
+        schema:
+          type: string
+          format: date
+        description: Date Modify (range)
+      - in: query
+        name: datemodify_before
+        schema:
+          type: string
+          format: date
+        description: Date Modify (range)
+      - in: query
+        name: description
+        schema:
+          type: string
+        description: Description (contains text)
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: id,min,loc,typeloc,questioned,refid,description,quality,rarity,habit,fluorescence,colour,cfmethods,cfref,reftxt,datemodify,specdisp,lorevtxtd,~all,*
+      - in: query
+        name: fluorescence
+        schema:
+          type: string
+        description: Fluorescence (contains text)
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: habit
+        schema:
+          type: string
+        description: Typical habit (contains text)
+      - in: query
+        name: id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: loc
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: lorevtxtd
+        schema:
+          type: string
+        description: Locality name, reversed (starts with)
+      - in: query
+        name: min
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: id,min,loc,typeloc,questioned,refid,description,quality,rarity,habit,fluorescence,colour,cfmethods,cfref,reftxt,datemodify,specdisp,lorevtxtd,~all,*
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: quality
+        schema:
+          type: array
+          items:
+            type: integer
+            enum:
+            - -1
+            - -2
+            - 0
+            - 1
+            - 2
+        description: 'Quality. Multiple choice. Values: </br> <pre style=''white-space:
+          pre-wrap;''>-2 - <b>Rock forming mineral/non-crystalline/little interest
+          for collectors.</b> </br>-1 - <b>Poor for species, only of interest for
+          locality collectors.</b> </br>0 - <b>not specified / average specimens</b>
+          </br>1 - <b>Good crystals or rich for species - important.</b> </br>2 -
+          <b>Excellent - world class for species or very significant.</b> </br></pre>'
+        explode: true
+        style: form
+      - in: query
+        name: questioned
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+        description: Is questioned
+      - in: query
+        name: rarity
+        schema:
+          type: array
+          items:
+            type: integer
+            enum:
+            - -1
+            - -2
+            - -3
+            - 0
+            - 1
+            - 2
+            - 3
+        description: 'Rarity. Multiple choice. Values: </br> <pre style=''white-space:
+          pre-wrap;''>-3 - <b>Extremely Rare</b> </br>-2 - <b>Very Rare</b> </br>-1
+          - <b>Rare</b> </br>0 - <b>Not specified / average</b> </br>1 - <b>Common</b>
+          </br>2 - <b>Very Common</b> </br>3 - <b>Extremely Common</b> </br></pre>'
+        explode: true
+        style: form
+      - in: query
+        name: reftxt
+        schema:
+          type: string
+        description: Reference Text (contains text)
+      - in: query
+        name: specdisp
+        schema:
+          type: string
+        description: Special display / storage requirements (contains text)
+      - in: query
+        name: typeloc
+        schema:
+          type: integer
+          enum:
+          - 0
+          - 1
+        description: Is type locality (TL)
       tags:
-      - photocount
+      - Occurrences
       security:
       - tokenAuth: []
       - tokenAuth: []
-      - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocentriesList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocentriesList'
+          description: ''
+  /occurrences-statistics/:
+    get:
+      operationId: occurrences_statistics_list
+      description: |-
+        The endpoint for the table that stores locality-geomaterial pairs and some statistics for them.
+        The main difference from the occurrences endpoint is that this table also includes geomaterials aggregated from sublocalities,
+        even if they don't have an occurrence record at the current locality.
+        An occurrence is a record of a specific geomaterial (e.g., mineral) at a specific locality.
+      parameters:
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: lstm_loc,lstm_min,lstm_numlocs,lstm_imavar,lstm_imareal,lstm_photocount,lstm_islocentry,lstm_typeloc,lstm_qualitymax,lstm_questioned,lstm_sublocslist,lstm_display_name,lstm_changed,~all,*
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: lstm_changed_after
+        schema:
+          type: string
+          format: date
+        description: Date Modified (range)
+      - in: query
+        name: lstm_changed_before
+        schema:
+          type: string
+          format: date
+        description: Date Modified (range)
+      - in: query
+        name: lstm_display_name
+        schema:
+          type: string
+      - in: query
+        name: lstm_id
+        schema:
+          type: integer
+      - in: query
+        name: lstm_imareal
+        schema:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          enum:
+          - 0
+          - 1
+        description: IMA mineral
+      - in: query
+        name: lstm_imavar
+        schema:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          enum:
+          - 0
+          - 1
+        description: IMA mineral or variety
+      - in: query
+        name: lstm_islocentry
+        schema:
+          type: integer
+      - in: query
+        name: lstm_loc
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: lstm_min
+        schema:
+          type: array
+          items:
+            type: integer
+            maximum: 2147483647
+            minimum: -2147483648
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: lstm_numlocs
+        schema:
+          type: integer
+      - in: query
+        name: lstm_photocount
+        schema:
+          type: integer
+      - in: query
+        name: lstm_photocount__gte
+        schema:
+          type: integer
+        description: Photo count (>=)
+      - in: query
+        name: lstm_photocount__lte
+        schema:
+          type: integer
+        description: Photo count (<=)
+      - in: query
+        name: lstm_qualitymax
+        schema:
+          type: integer
+        description: Quality (>=)
+      - in: query
+        name: lstm_questioned
+        schema:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          enum:
+          - 0
+          - 1
+        description: Is questioned
+      - in: query
+        name: lstm_sublocslist
+        schema:
+          type: string
+      - in: query
+        name: lstm_typeloc
+        schema:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          enum:
+          - 0
+          - 1
+        description: Is type locality (TL)
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: lstm_loc,lstm_min,lstm_numlocs,lstm_imavar,lstm_imareal,lstm_photocount,lstm_islocentry,lstm_typeloc,lstm_qualitymax,lstm_questioned,lstm_sublocslist,lstm_display_name,lstm_changed,~all,*
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - Occurrences
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocstatsminList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocstatsminList'
+          description: ''
+  /occurrences-statistics/{lstm_id}/:
+    get:
+      operationId: occurrences_statistics_retrieve
+      description: |-
+        The endpoint for the table that stores locality-geomaterial pairs and some statistics for them.
+        The main difference from the occurrences endpoint is that this table also includes geomaterials aggregated from sublocalities,
+        even if they don't have an occurrence record at the current locality.
+        An occurrence is a record of a specific geomaterial (e.g., mineral) at a specific locality.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: lstm_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this locstatsmin.
+        required: true
+      tags:
+      - Occurrences
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locstatsmin'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Locstatsmin'
+          description: ''
+  /occurrences/{id}/:
+    get:
+      operationId: occurrences_retrieve
+      description: |-
+        The main endpoint for occurrences. List or retrieve occurrences.
+        An occurrence is a record of specific geomaterial (mineral, etc) at a specific locality.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: id
+        schema:
+          type: integer
+          description: Occurrence id
+        required: true
+      tags:
+      - Occurrences
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locentries'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Locentries'
+          description: ''
+  /reference-authors/:
+    get:
+      operationId: reference_authors_list
+      description: List of authors associated with references.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: q
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: ra_id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: ra_ref_id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: ra_type
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - '0'
+            - '1'
+            - '10'
+            - '11'
+            - '12'
+            - '2'
+            - '3'
+            - '4'
+            - '5'
+            - '6'
+            - '7'
+            - '8'
+            - '9'
+        description: 'Author type: multiple choice'
+        explode: true
+        style: form
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefAuthorsList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefAuthorsList'
+          description: ''
+  /reference-authors-unique/:
+    get:
+      operationId: reference_authors_unique_list
+      description: |-
+        A mixin class that adds method to a Viewset,
+        that saves the data to csv using cursor pagination.
+        Directory to save to: CSVDUMP_DIR in settings.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefAuthorUniqueList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefAuthorUniqueList'
+          description: ''
+  /reference-authors-unique/{rau_id}/:
+    get:
+      operationId: reference_authors_unique_retrieve
+      description: |-
+        A mixin class that adds method to a Viewset,
+        that saves the data to csv using cursor pagination.
+        Directory to save to: CSVDUMP_DIR in settings.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: rau_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref author unique.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefAuthorUnique'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefAuthorUnique'
+          description: ''
+  /reference-authors/{ra_id}/:
+    get:
+      operationId: reference_authors_retrieve
+      description: List of authors associated with references.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: ra_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref authors.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefAuthors'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefAuthors'
+          description: ''
+  /reference-citations/:
+    get:
+      operationId: reference_citations_list
+      description: |-
+        Reference citations for minerals, localities, articles, and photos.
+        Each record links a reference to an associated object.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: deleted
+        schema:
+          type: boolean
+        description: Deleted status
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: rc_id,rc_his_id,rc_ref_id,rc_rp_id,rc_date,rc_date_created,rc_min,rc_loc,rc_article,rc_photo,rc_glossary,rc_entryid,rc_pagefrom,rc_pageto,rc_citationno,rc_comments,rc_deletedby,rc_type,rc_ukey,~all,*
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: rc_id,rc_his_id,rc_ref_id,rc_rp_id,rc_date,rc_date_created,rc_min,rc_loc,rc_article,rc_photo,rc_glossary,rc_entryid,rc_pagefrom,rc_pageto,rc_citationno,rc_comments,rc_deletedby,rc_type,rc_ukey,~all,*
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - rc_citationno
+          - rc_date
+          - rc_date_created
+          - rc_entryid
+          - rc_id
+          - rc_type
+        description: Order the response by a field. Prepend "-" to sort descending.
+        examples:
+          SortByRcIdDescending:
+            value: -rc_id
+            summary: Sort by rc_id descending
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: rc_article
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_entryid
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_id_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_id_max
+        schema:
+          type: integer
+      - in: query
+        name: rc_id_min
+        schema:
+          type: integer
+      - in: query
+        name: rc_loc
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_min
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_photo
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_ref_id
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: rc_type
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - -unset-
+            - age
+            - analysis
+            - article
+            - geo-event
+            - glossary
+            - loc
+            - locentry
+            - min
+            - paleo
+            - paragenesis
+        description: 'Reference citation type: multiple choice (AND)'
+        explode: true
+        style: form
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefCitationsList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefCitationsList'
+          description: ''
+  /reference-citations/{rc_id}/:
+    get:
+      operationId: reference_citations_retrieve
+      description: |-
+        Reference citations for minerals, localities, articles, and photos.
+        Each record links a reference to an associated object.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: rc_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref citations.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefCitations'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefCitations'
+          description: ''
+  /reference-citations/dict/:
+    get:
+      operationId: reference_citations_dict_retrieve
+      description: |-
+        Reference citations for minerals, localities, articles, and photos.
+        Each record links a reference to an associated object.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: field
+        schema:
+          type: string
+          enum:
+          - rc_type
+        description: Field name for which to return dictionary of values.
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+            text/csv:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /reference-classify/:
+    get:
+      operationId: reference_classify_list
+      description: |-
+        rc_type:
+            LLC: Library of Congress Classification
+            DDC: Dewey Decimal Classification for books
+            FAST: Faceted Application of Subject Terminology
+            VIAF: Virtual International Authority File
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefClassifyList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefClassifyList'
+          description: ''
+  /reference-classify/{rc_id}/:
+    get:
+      operationId: reference_classify_retrieve
+      description: |-
+        rc_type:
+            LLC: Library of Congress Classification
+            DDC: Dewey Decimal Classification for books
+            FAST: Faceted Application of Subject Terminology
+            VIAF: Virtual International Authority File
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: rc_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref classify.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefClassify'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefClassify'
+          description: ''
+  /reference-ddc/:
+    get:
+      operationId: reference_ddc_list
+      description: Dewey Decimal Classification for books
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDdcList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedDdcList'
+          description: ''
+  /reference-ddc/{ddc_code}/:
+    get:
+      operationId: reference_ddc_retrieve
+      description: Dewey Decimal Classification for books
+      parameters:
+      - in: path
+        name: ddc_code
+        schema:
+          type: string
+        description: A unique value identifying this ddc.
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ddc'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Ddc'
+          description: ''
+  /reference-extra/:
+    get:
+      operationId: reference_extra_list
+      description: Dictionary for reference types
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefExtraList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefExtraList'
+          description: ''
+  /reference-extra/{re_id}/:
+    get:
+      operationId: reference_extra_retrieve
+      description: Dictionary for reference types
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: re_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref extra.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefExtra'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefExtra'
+          description: ''
+  /reference-isbn/:
+    get:
+      operationId: reference_isbn_list
+      description: |-
+        References ISBN (International Standard Book Number).
+        Each record represents a unique ISBN and includes additional metadata such as the series it belongs to,
+        the publisher, year of publication, and the title.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefIsbnList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefIsbnList'
+          description: ''
+  /reference-isbn/{ri_isbn}/:
+    get:
+      operationId: reference_isbn_retrieve
+      description: |-
+        References ISBN (International Standard Book Number).
+        Each record represents a unique ISBN and includes additional metadata such as the series it belongs to,
+        the publisher, year of publication, and the title.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: ri_isbn
+        schema:
+          type: string
+        description: A unique value identifying this ref isbn.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefIsbn'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefIsbn'
+          description: ''
+  /reference-languages/:
+    get:
+      operationId: reference_languages_list
+      description: Languages of the references (e.g. book/document language)
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefLanguagesList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefLanguagesList'
+          description: ''
+  /reference-languages/{rl_id}/:
+    get:
+      operationId: reference_languages_retrieve
+      description: Languages of the references (e.g. book/document language)
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: rl_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref languages.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefLanguages'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefLanguages'
+          description: ''
+  /reference-lcc/:
+    get:
+      operationId: reference_lcc_list
+      description: Library of Congress Classification for books
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLccList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedLccList'
+          description: ''
+  /reference-lcc/{lcc_code}/:
+    get:
+      operationId: reference_lcc_retrieve
+      description: Library of Congress Classification for books
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: lcc_code
+        schema:
+          type: string
+        description: A unique value identifying this lcc.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lcc'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Lcc'
+          description: ''
+  /reference-types/:
+    get:
+      operationId: reference_types_list
+      description: Dictionary for reference types
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefTypesList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefTypesList'
+          description: ''
+  /reference-types/{rt_id}/:
+    get:
+      operationId: reference_types_retrieve
+      description: Dictionary for reference types
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: rt_id
+        schema:
+          type: integer
+        description: A unique integer value identifying this ref types.
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefTypes'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/RefTypes'
+          description: ''
+  /references/:
+    get:
+      operationId: references_list
+      description: |-
+        One of the main endpoints for references. List or retrieve reference records and their metadata.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: editdate_gte
+        schema:
+          type: string
+          format: date
+        description: Edit Date >=
+      - in: query
+        name: entrydate_gte
+        schema:
+          type: string
+          format: date
+        description: Entry Date >=
+      - name: expand
+        required: false
+        in: query
+        description: Select fields to expand
+        style: form
+        explode: false
+        schema:
+          title: Expanded fields
+          type: array
+          items:
+            type: string
+            enum:
+            - ~all
+            - '*'
+      - name: fields
+        required: false
+        in: query
+        description: Specify required fields by comma
+        schema:
+          title: Selected fields
+          type: string
+        example: ref_id,ref_his_id,ref_entrydate,ref_editdate,ref_rawtext,ref_htmltext,ref_type,ref_access,ref_title,ref_journal,ref_year,ref_year_to,ref_month,ref_day,ref_series,ref_volume,ref_volume_int,ref_issue,ref_issue_int,ref_pagefrom,ref_pageto,ref_pagefrom_txt,ref_pageto_txt,ref_publisher,ref_place,ref_url,ref_file_url,ref_doi,ref_other_fields,ref_notes,ref_deleted_by,ref_issuetitle,ref_edition,ref_parent,ref_part,ref_replaced_by,ref_isbn,ref_abstract,ref_lastautodl,ref_toplevel,ref_journal_t,ref_title_t,~all,*
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: id_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: IDs (comma separated)
+        explode: false
+        style: form
+      - in: query
+        name: id_range_max
+        schema:
+          type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
+      - in: query
+        name: id_range_min
+        schema:
+          type: integer
+        description: 'ID range. Format: ?id_min=...&id_max=...'
+      - in: query
+        name: lastautodl_gte
+        schema:
+          type: string
+          format: date
+        description: Last Auto Download >=
+      - name: omit
+        required: false
+        in: query
+        description: Specify omitted fields by comma
+        schema:
+          title: Omitted fields
+          type: string
+        example: ref_id,ref_his_id,ref_entrydate,ref_editdate,ref_rawtext,ref_htmltext,ref_type,ref_access,ref_title,ref_journal,ref_year,ref_year_to,ref_month,ref_day,ref_series,ref_volume,ref_volume_int,ref_issue,ref_issue_int,ref_pagefrom,ref_pageto,ref_pagefrom_txt,ref_pageto_txt,ref_publisher,ref_place,ref_url,ref_file_url,ref_doi,ref_other_fields,ref_notes,ref_deleted_by,ref_issuetitle,ref_edition,ref_parent,ref_part,ref_replaced_by,ref_isbn,ref_abstract,ref_lastautodl,ref_toplevel,ref_journal_t,ref_title_t,~all,*
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - ref_doi
+          - ref_editdate
+          - ref_entrydate
+          - ref_id
+          - ref_journal
+          - ref_publisher
+          - ref_title
+          - ref_type
+          - ref_year
+        description: Order the response by a field. Prepend "-" to sort descending.
+        examples:
+          SortByRefIdDescending:
+            value: -ref_id
+            summary: Sort by ref_id descending
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: q
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: ref_deleted_by
+        schema:
+          type: boolean
+        description: True for deleted (>0), False for not deleted (empty or 0)
+      - in: query
+        name: ref_doi
+        schema:
+          type: string
+        description: DOI Exact Match
+      - in: query
+        name: ref_isbn
+        schema:
+          type: string
+        description: ISBN Exact Match
+      - in: query
+        name: ref_journal
+        schema:
+          type: string
+        description: Journal Contains
+      - in: query
+        name: ref_parent_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Parent reference IDs (comma separated)
+        explode: false
+        style: form
+      - in: query
+        name: ref_publisher
+        schema:
+          type: string
+        description: Publisher Contains
+      - in: query
+        name: ref_replaced_by
+        schema:
+          type: boolean
+        description: True for replaced (>0), False for not replaced (empty or 0)
+      - in: query
+        name: ref_title
+        schema:
+          type: string
+        description: Title Contains
+      - in: query
+        name: ref_type
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Reference Type (multiple, comma-separated). See [Reference types](/reftypes/).
+        explode: false
+        style: form
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefsList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedRefsList'
+          description: ''
+  /references/{ref_id}/:
+    get:
+      operationId: references_retrieve
+      description: |-
+        One of the main endpoints for references. List or retrieve reference records and their metadata.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: ref_id
+        schema:
+          type: integer
+          description: Mindat Ref. ID
+        required: true
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refs'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Refs'
+          description: ''
+  /references/dict/:
+    get:
+      operationId: references_dict_retrieve
+      description: |-
+        One of the main endpoints for references. List or retrieve reference records and their metadata.
+        * Requires token or login authentication.
+      parameters:
+      - in: query
+        name: field
+        schema:
+          type: string
+        description: Field name for which to return dictionary of values.
+        required: true
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      tags:
+      - References
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+            text/csv:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /relations/:
+    get:
+      operationId: relations_list
+      description: |-
+        Endpoint to list and retrieve relations between geomaterials (minerals).
+        * Requires no authentication.
+      parameters:
+      - in: query
+        name: min1
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Filter by a list of min1 (Geomaterial IDs, comma separated).
+        explode: false
+        style: form
+      - in: query
+        name: min2
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Filter by a list of min2 (Geomaterial IDs, comma separated).
+        explode: false
+        style: form
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: q
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: rel
+        schema:
+          type: array
+          items:
+            type: integer
+        description: 'Geomaterials relation type. Multiple choice. Values: </br> <pre
+          style=''white-space: pre-wrap;''>1 - <b>Synonym</b> </br>2 - <b>Mixture</b>
+          </br>3 - <b>see also</b> </br>4 - <b>Minerals structurally related to group</b>
+          </br>5 - <b>Associated Minerals at Type or First recorded Locality</b> </br>6
+          - <b>Epitaxial Relationships of</b> </br>7 - <b>Polymorph of</b> </br>8
+          - <b>Isostructural with</b> </br>9 - <b>Minerals chemically related to group</b>
+          </br>10 - <b>Common Associates</b> </br>11 - <b>Essential minerals</b> </br>12
+          - <b>Common ore minerals</b> </br>13 - <b>Accessory minerals</b> </br>51
+          - <b>Synonym of (1 to many)</b> </br>52 - <b>Variety of</b> </br>53 - <b>Belongs
+          to Group</b> </br>54 - <b>Polytype of</b> </br>55 - <b>Rocks: child of</b>
+          </br>56 - <b>Rocks: child of (2)</b> </br></pre>'
+        explode: false
+        style: form
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRelationsApiList'
+          description: ''
+  /relations/{rid}/:
+    get:
+      operationId: relations_retrieve
+      description: |-
+        Endpoint to list and retrieve relations between geomaterials (minerals).
+        * Requires no authentication.
+      parameters:
+      - in: path
+        name: rid
+        schema:
+          type: integer
+        description: A unique integer value identifying this relations api.
+        required: true
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationsApi'
+          description: ''
+  /spacegroups/:
+    get:
+      operationId: spacegroups_list
+      description: Spacegroup dictionary
+      parameters:
+      - in: query
+        name: cclass
+        schema:
+          type: integer
+        description: 'Filter by related Crystalclass ID. For values reference see
+          endpoint: /crystalclasses/'
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: id_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Filter by a list of Spacegroup IDs (comma separated).
+        explode: false
+        style: form
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: sgtext
+        schema:
+          type: string
+        description: Filter by space group text (case-insensitive).
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSpacegroupList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedSpacegroupList'
+          description: ''
+  /spacegroups/{id}/:
+    get:
+      operationId: spacegroups_retrieve
+      description: Spacegroup dictionary
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this spacegroup.
+        required: true
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Spacegroup'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Spacegroup'
+          description: ''
+  /spacegroupsets/:
+    get:
+      operationId: spacegroupsets_list
+      description: Spacegroupset dictionary
+      parameters:
+      - in: query
+        name: cclass
+        schema:
+          type: integer
+        description: 'Filter by related Crystalclass ID. For values reference see
+          endpoint: /crystalclasses/'
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: query
+        name: id_in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Filter by a list of Spacegroup Set IDs (comma separated).
+        explode: false
+        style: form
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page-size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: sgstext
+        schema:
+          type: string
+        description: Filter by spacegroup set text (case-insensitive).
+      - in: query
+        name: spacegroup
+        schema:
+          type: integer
+        description: 'Filter by Spacegroup ID. For values reference see endpoint:
+          /spacegroups/'
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSpacegroupsetList'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaginatedSpacegroupsetList'
+          description: ''
+  /spacegroupsets/{id}/:
+    get:
+      operationId: spacegroupsets_retrieve
+      description: Spacegroupset dictionary
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - json
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this spacegroupset.
+        required: true
+      tags:
+      - Geomaterials
+      security:
+      - tokenAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Spacegroupset'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/Spacegroupset'
+          description: ''
 components:
   schemas:
     Age:
@@ -1473,22 +4927,6 @@ components:
       - agereference
       - ages1
       - ages2
-    AuthToken:
-      type: object
-      properties:
-        username:
-          type: string
-          writeOnly: true
-        password:
-          type: string
-          writeOnly: true
-        token:
-          type: string
-          readOnly: true
-      required:
-      - password
-      - token
-      - username
     BlankEnum:
       enum:
       - ''
@@ -1501,35 +4939,29 @@ components:
       - Very Good
       - Perfect
       type: string
-    Countries:
+    Crystalclass:
       type: object
-      description: to display -null- values as -empty string-
       properties:
         id:
           type: integer
           readOnly: true
-        text:
+        system:
           type: string
-          maxLength: 255
-        continent:
+          description: The crystal system.
+          maxLength: 12
+        symbol:
           type: string
-          maxLength: 2
-        iso:
+          description: The symmetry symbol for the crystal class.
+          maxLength: 32
+        name:
           type: string
-          maxLength: 2
-        latdir:
-          type: string
-          maxLength: 1
-        longdir:
-          type: string
-          maxLength: 1
+          description: The name of the crystal class.
+          maxLength: 128
       required:
-      - continent
       - id
-      - iso
-      - latdir
-      - longdir
-      - text
+      - name
+      - symbol
+      - system
     CsystemEnum:
       enum:
       - Isometric
@@ -1542,6 +4974,19 @@ components:
       - Amorphous
       - Icosahedral
       type: string
+    Ddc:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ddc_code:
+          type: string
+          maxLength: 255
+        ddc_title:
+          type: string
+          maxLength: 255
+      required:
+      - ddc_code
+      - ddc_title
     DiaphenyEnum:
       enum:
       - Transparent
@@ -1572,25 +5017,15 @@ components:
       - Micaceous
       - Step-Like
       type: string
-    GisFeatureCollectionEnum:
-      type: string
-      enum:
-      - FeatureCollection
-    GisFeatureEnum:
-      type: string
-      enum:
-      - Feature
     IMAMineralList:
       type: object
-      description: to display -null- values as -empty string-
+      description: Serializer limited to IMA minerals.
       properties:
         id:
           type: integer
           readOnly: true
         name:
           type: string
-          nullable: true
-          maxLength: 255
         ima_formula:
           type: string
         ima_symbol:
@@ -1639,116 +5074,22 @@ components:
       - mindat_formula_note
       - mindat_guid
       - mindat_longid
+      - name
       - type_localities
       - type_specimen_store
-    LocGeoregion:
+    Lcc:
       type: object
+      description: to display -null- values as -empty string-
       properties:
-        type:
-          $ref: '#/components/schemas/GisFeatureEnum'
-        id:
-          type: integer
-        geometry:
-          oneOf:
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - Point
-              coordinates:
-                type: array
-                items:
-                  type: number
-                  format: float
-                example:
-                - 12.9721
-                - 77.5933
-                minItems: 2
-                maxItems: 3
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - LineString
-              coordinates:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: number
-                    format: float
-                  example:
-                  - 12.9721
-                  - 77.5933
-                  minItems: 2
-                  maxItems: 3
-                example:
-                - - 22.4707
-                  - 70.0577
-                - - 12.9721
-                  - 77.5933
-                minItems: 2
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - Polygon
-              coordinates:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: array
-                    items:
-                      type: number
-                      format: float
-                    example:
-                    - 12.9721
-                    - 77.5933
-                    minItems: 2
-                    maxItems: 3
-                  example:
-                  - - 22.4707
-                    - 70.0577
-                  - - 12.9721
-                    - 77.5933
-                  minItems: 4
-                example:
-                - - - 0.0
-                    - 0.0
-                  - - 0.0
-                    - 50.0
-                  - - 50.0
-                    - 50.0
-                  - - 50.0
-                    - 0.0
-                  - - 0.0
-                    - 0.0
-        properties:
-          type: object
-          properties:
-            lgr_revtxtd:
-              type: string
-              maxLength: 1024
-            lgr_updttime:
-              type: string
-              format: date-time
-            lgr_non_hierarchical:
-              type: integer
-              maximum: 2147483647
-              minimum: -2147483648
-    LocGeoregionList:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/GisFeatureCollectionEnum'
-        features:
-          type: array
-          items:
-            $ref: '#/components/schemas/LocGeoregion'
+        lcc_code:
+          type: string
+          maxLength: 16
+        lcc_title:
+          type: string
+          maxLength: 255
+      required:
+      - lcc_code
+      - lcc_title
     Locality:
       type: object
       description: to display -null- values as -empty string-
@@ -1760,6 +5101,9 @@ components:
           type: string
         guid:
           type: string
+          readOnly: true
+        locality_type:
+          type: integer
           readOnly: true
         txt:
           type: string
@@ -1802,6 +5146,10 @@ components:
           maximum: 2147483647
           minimum: -2147483648
         parent:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        sublocs:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
@@ -1893,6 +5241,7 @@ components:
       - level
       - links
       - loc_group
+      - locality_type
       - locsexclude
       - locsinclude
       - longid
@@ -1903,7 +5252,210 @@ components:
       - parent
       - revtxtd
       - status_year
+      - sublocs
       - wikipedia
+    LocalityTranslate:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        lt_id:
+          type: integer
+          readOnly: true
+        lt_loc:
+          type: integer
+        lt_text:
+          type: string
+          maxLength: 2000
+        lt_datetime:
+          type: string
+          format: date-time
+        lt_uid:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        lt_iso:
+          type: string
+          maxLength: 24
+        lt_important:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - lt_datetime
+      - lt_id
+      - lt_important
+      - lt_iso
+      - lt_loc
+      - lt_text
+      - lt_uid
+    Locentries:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Occurrence id
+        min:
+          type: integer
+          nullable: true
+          description: mineral
+        loc:
+          type: integer
+          nullable: true
+          description: locality
+        typeloc:
+          allOf:
+          - $ref: '#/components/schemas/TypelocEnum'
+          description: is type locality
+          minimum: -2147483648
+          maximum: 2147483647
+        questioned:
+          allOf:
+          - $ref: '#/components/schemas/QuestionedEnum'
+          description: is questioned (there are doubts that the mineral is present
+            on the locality)
+          minimum: -2147483648
+          maximum: 2147483647
+        refid:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: reference id
+        description:
+          type: string
+          nullable: true
+          description: text description
+        quality:
+          allOf:
+          - $ref: '#/components/schemas/QualityEnum'
+          description: quality for a mineral at the locality.
+          minimum: -32768
+          maximum: 32767
+        rarity:
+          allOf:
+          - $ref: '#/components/schemas/RarityEnum'
+          description: rarity for a mineral at the locality.
+          minimum: -32768
+          maximum: 32767
+        habit:
+          type: string
+          nullable: true
+          description: Description of the typical habit
+        fluorescence:
+          type: string
+          nullable: true
+          description: Description of fluorescence
+        colour:
+          type: string
+          nullable: true
+          description: Description of typical color(s)
+        cfmethods:
+          type: string
+          nullable: true
+          description: Analysis method
+        cfref:
+          type: string
+          nullable: true
+          description: Analysis text
+        reftxt:
+          type: string
+          description: Reference text (legacy reference system)
+        datemodify:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last change date
+        specdisp:
+          type: string
+          nullable: true
+          description: 'Special display / storage requirements:'
+        lorevtxtd:
+          type: string
+          description: Locality name, reversed. Text string useful for searching for
+            occurrences on all sublocalities
+          maxLength: 1024
+      required:
+      - id
+      - lorevtxtd
+      - reftxt
+    Locstatsmin:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        lstm_loc:
+          type: integer
+          description: locality
+        lstm_min:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: mineral
+        lstm_numlocs:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          description: number of sublocalities with this mineral
+        lstm_imavar:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          description: 1 if the geomaterial is an IMA mineral or a variety of an IMA
+            mineral
+        lstm_imareal:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          description: 1 if the geomaterial is an IMA mineral
+        lstm_photocount:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          description: photos count (not including child photos)
+        lstm_islocentry:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          description: If 1, there is a corresponding occurrence record. If 0, this
+            mineral record is the result of aggregation from sublocality.
+        lstm_typeloc:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          description: type locality, aggregated from sublocs
+        lstm_qualitymax:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          description: mineral quality, aggregated from sublocs as max value
+        lstm_questioned:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+          description: mineral is questioned on this subloc
+        lstm_sublocslist:
+          type: string
+          description: list of occurrences, recording this mineral on this locality,
+            including occurrences from sublocalities, limited to max value of 6
+          maxLength: 1000
+        lstm_display_name:
+          type: string
+          maxLength: 255
+        lstm_changed:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of last modification
+      required:
+      - lstm_changed
+      - lstm_display_name
+      - lstm_loc
+      - lstm_min
+      - lstm_sublocslist
     Locstatus:
       type: object
       description: to display -null- values as -empty string-
@@ -1992,7 +5544,7 @@ components:
       type: string
     MineralList:
       type: object
-      description: to display -null- values as -empty string-
+      description: Main serializer for geomaterials
       properties:
         id:
           type: integer
@@ -2226,12 +5778,12 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
-          description: Point group id
+          description: Point group ID. See [Crystal classes](/crystalclasses/).
         spacegroup:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
-          description: Space group id
+          description: Space group ID. See [Space groups](/spacegroups/).
         a:
           type: string
           description: 'Ratio: "a" - x axis spacing'
@@ -2605,7 +6157,7 @@ components:
           description: Special Storage / Display Requirements
         spacegroupset:
           type: string
-          description: 'Space Group: Setting'
+          description: Space group setting. See [Space groups settings](/spacegroupsets/).
           maxLength: 50
         approval_year:
           type: integer
@@ -2665,6 +6217,12 @@ components:
           maximum: 2147483647
           minimum: -2147483648
           description: '? if use this, need to briefly describe algorithm.'
+        type_localities:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: Type localities
         relations:
           type: array
           items:
@@ -2681,12 +6239,6 @@ components:
             type: integer
           readOnly: true
           description: List of localities where the geomaterial was found
-        type_localities:
-          type: array
-          items:
-            type: integer
-          readOnly: true
-          description: Type localities
       required:
       - a
       - alpha
@@ -2827,7 +6379,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Age'
-    PaginatedCountriesList:
+    PaginatedCrystalclassList:
       type: object
       properties:
         count:
@@ -2846,7 +6398,27 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/Countries'
+            $ref: '#/components/schemas/Crystalclass'
+    PaginatedDdcList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ddc'
     PaginatedIMAMineralListList:
       type: object
       properties:
@@ -2867,7 +6439,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IMAMineralList'
-    PaginatedLocGeoregionList:
+    PaginatedLccList:
       type: object
       properties:
         count:
@@ -2884,20 +6456,89 @@ components:
           format: uri
           example: http://api.example.org/accounts/?page=2
         results:
-          $ref: '#/components/schemas/LocGeoregionList'
+          type: array
+          items:
+            $ref: '#/components/schemas/Lcc'
     PaginatedLocalityList:
       type: object
       properties:
+        count:
+          type: integer
+          example: 123
         next:
           type: string
           nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
         previous:
           type: string
           nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
         results:
           type: array
           items:
             $ref: '#/components/schemas/Locality'
+    PaginatedLocalityTranslateList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalityTranslate'
+    PaginatedLocentriesList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locentries'
+    PaginatedLocstatsminList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locstatsmin'
     PaginatedLocstatusList:
       type: object
       properties:
@@ -2958,13 +6599,748 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MineralList'
-    PasscodeResponse:
+    PaginatedRefAuthorUniqueList:
       type: object
       properties:
-        passcode:
+        count:
+          type: integer
+          example: 123
+        next:
           type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefAuthorUnique'
+    PaginatedRefAuthorsList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefAuthors'
+    PaginatedRefCitationsList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefCitations'
+    PaginatedRefClassifyList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefClassify'
+    PaginatedRefExtraList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefExtra'
+    PaginatedRefIsbnList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefIsbn'
+    PaginatedRefLanguagesList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefLanguages'
+    PaginatedRefTypesList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefTypes'
+    PaginatedRefsList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Refs'
+    PaginatedRelationsApiList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RelationsApi'
+    PaginatedSpacegroupList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spacegroup'
+    PaginatedSpacegroupsetList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Spacegroupset'
+    QualityEnum:
+      enum:
+      - -2
+      - -1
+      - 0
+      - 1
+      - 2
+      type: integer
+    QuestionedEnum:
+      enum:
+      - 0
+      - 1
+      type: integer
+    RaTypeEnum:
+      enum:
+      - '0'
+      - '1'
+      - '2'
+      - '3'
+      - '4'
+      - '5'
+      - '6'
+      - '7'
+      - '8'
+      - '9'
+      - '10'
+      - '11'
+      - '12'
+      type: string
+    RarityEnum:
+      enum:
+      - -3
+      - -2
+      - -1
+      - 0
+      - 1
+      - 2
+      - 3
+      type: integer
+    RefAuthorUnique:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        rau_id:
+          type: integer
+          readOnly: true
+        rau_text:
+          type: string
+          maxLength: 255
       required:
-      - passcode
+      - rau_id
+      - rau_text
+    RefAuthors:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ra_id:
+          type: integer
+          readOnly: true
+        ra_ref_id:
+          type: integer
+          description: Mindat Ref. ID
+        ra_name:
+          type: string
+          maxLength: 255
+        ra_type:
+          $ref: '#/components/schemas/RaTypeEnum'
+      required:
+      - ra_id
+      - ra_name
+      - ra_ref_id
+      - ra_type
+    RefCitations:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        rc_id:
+          type: integer
+          readOnly: true
+        rc_his_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_ref_id:
+          type: integer
+          description: Mindat Ref. ID
+        rc_rp_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_date:
+          type: string
+          format: date-time
+        rc_date_created:
+          type: string
+          format: date
+        rc_min:
+          type: integer
+        rc_loc:
+          type: integer
+        rc_article:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_photo:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_glossary:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_entryid:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_pagefrom:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_pageto:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_citationno:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_comments:
+          type: string
+          maxLength: 1024
+        rc_deletedby:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rc_type:
+          $ref: '#/components/schemas/RefCitationsRcTypeEnum'
+        rc_ukey:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - rc_article
+      - rc_citationno
+      - rc_comments
+      - rc_date
+      - rc_date_created
+      - rc_deletedby
+      - rc_entryid
+      - rc_glossary
+      - rc_his_id
+      - rc_id
+      - rc_loc
+      - rc_min
+      - rc_pagefrom
+      - rc_pageto
+      - rc_photo
+      - rc_ref_id
+      - rc_rp_id
+      - rc_ukey
+    RefCitationsRcTypeEnum:
+      enum:
+      - min
+      - loc
+      - locentry
+      - article
+      - analysis
+      - paleo
+      - age
+      - geo-event
+      - paragenesis
+      - glossary
+      - -unset-
+      type: string
+    RefClassify:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        rc_id:
+          type: integer
+          readOnly: true
+        rc_ref_id:
+          type: integer
+          description: Mindat Ref. ID
+        rc_type:
+          oneOf:
+          - $ref: '#/components/schemas/RefClassifyRcTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        rc_value:
+          type: string
+          maxLength: 255
+      required:
+      - rc_id
+      - rc_ref_id
+      - rc_value
+    RefClassifyRcTypeEnum:
+      enum:
+      - DDC
+      - LCC
+      - FAST
+      - VIAF
+      type: string
+    RefExtra:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        re_id:
+          type: integer
+          readOnly: true
+        re_code:
+          type: string
+          maxLength: 2
+        re_text:
+          type: string
+          maxLength: 255
+      required:
+      - re_code
+      - re_id
+      - re_text
+    RefIsbn:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ri_isbn:
+          type: string
+          maxLength: 255
+        ri_series:
+          type: string
+          maxLength: 255
+        ri_publisher:
+          type: string
+          maxLength: 255
+        ri_year:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ri_title:
+          type: string
+          maxLength: 255
+      required:
+      - ri_isbn
+      - ri_publisher
+      - ri_series
+      - ri_title
+      - ri_year
+    RefLanguages:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        rl_id:
+          type: integer
+          readOnly: true
+        rl_ref_id:
+          type: integer
+          description: Mindat Ref. ID
+        rl_iso:
+          type: string
+          maxLength: 10
+        rl_minor:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - rl_id
+      - rl_iso
+      - rl_minor
+      - rl_ref_id
+    RefTypes:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        rt_id:
+          type: integer
+          readOnly: true
+        rt_code:
+          type: string
+          maxLength: 4
+        rt_name:
+          type: string
+          maxLength: 255
+        rt_important:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - rt_code
+      - rt_id
+      - rt_important
+      - rt_name
+    Refs:
+      type: object
+      description: to display -null- values as -empty string-
+      properties:
+        ref_id:
+          type: integer
+          readOnly: true
+          description: Mindat Ref. ID
+        ref_his_id:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_entrydate:
+          type: string
+          format: date
+        ref_editdate:
+          type: string
+          format: date
+          description: Date, when last edited. TIMESTAMP delta field for the table
+        ref_rawtext:
+          type: string
+          maxLength: 2000
+        ref_htmltext:
+          type: string
+          maxLength: 2000
+        ref_type:
+          type: integer
+          description: Reference Type ID. See [Reference types](/reference-types/).
+        ref_access:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        ref_title:
+          type: string
+          maxLength: 2000
+        ref_journal:
+          type: string
+          maxLength: 500
+        ref_year:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Year
+        ref_year_to:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_month:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        ref_day:
+          type: integer
+          maximum: 32767
+          minimum: -32768
+        ref_series:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_volume:
+          type: string
+          maxLength: 200
+        ref_volume_int:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_issue:
+          type: string
+          maxLength: 255
+        ref_issue_int:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_pagefrom:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_pageto:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_pagefrom_txt:
+          type: string
+          maxLength: 255
+        ref_pageto_txt:
+          type: string
+          maxLength: 255
+        ref_publisher:
+          type: string
+          maxLength: 2000
+        ref_place:
+          type: string
+          maxLength: 2000
+        ref_url:
+          type: string
+          maxLength: 2000
+        ref_file_url:
+          type: string
+          maxLength: 2000
+        ref_doi:
+          type: string
+          maxLength: 2000
+        ref_other_fields:
+          type: string
+        ref_notes:
+          type: string
+        ref_deleted_by:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_issuetitle:
+          type: string
+          maxLength: 1000
+        ref_edition:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_parent:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Parent reference ID
+        ref_part:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_replaced_by:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_isbn:
+          type: string
+          maxLength: 32
+        ref_abstract:
+          type: string
+        ref_lastautodl:
+          type: string
+          format: date
+        ref_toplevel:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ref_journal_t:
+          type: string
+          maxLength: 500
+        ref_title_t:
+          type: string
+          maxLength: 500
+      required:
+      - ref_abstract
+      - ref_access
+      - ref_day
+      - ref_deleted_by
+      - ref_doi
+      - ref_editdate
+      - ref_edition
+      - ref_entrydate
+      - ref_file_url
+      - ref_htmltext
+      - ref_id
+      - ref_isbn
+      - ref_issue
+      - ref_issue_int
+      - ref_issuetitle
+      - ref_journal
+      - ref_journal_t
+      - ref_lastautodl
+      - ref_month
+      - ref_notes
+      - ref_other_fields
+      - ref_pagefrom
+      - ref_pagefrom_txt
+      - ref_pageto
+      - ref_pageto_txt
+      - ref_parent
+      - ref_part
+      - ref_place
+      - ref_publisher
+      - ref_rawtext
+      - ref_replaced_by
+      - ref_series
+      - ref_title
+      - ref_title_t
+      - ref_toplevel
+      - ref_type
+      - ref_url
+      - ref_volume
+      - ref_volume_int
+      - ref_year
+      - ref_year_to
+    RelEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 12
+      - 13
+      - 51
+      - 52
+      - 53
+      - 54
+      - 55
+      - 56
+      type: integer
     Relations:
       type: object
       description: to display -null- values as -empty string-
@@ -2974,13 +7350,13 @@ components:
         relation_type:
           type: integer
           description: 'Single choice from: </br> <pre style=''white-space: pre-wrap;''>1
-            - <b>Synonym</b> </br>2 - <b>Mixture</b> </br>3 - <b>??</b> </br>4 - <b>Minerals
-            structurally related to group</b> </br>5 - <b>Associated Minerals at Type
-            or First recorded Locality</b> </br>6 - <b>Epitaxial Relationships of</b>
-            </br>7 - <b>Polymorph of</b> </br>8 - <b>Isostructural with</b> </br>9
-            - <b>Minerals chemically related to group</b> </br>10 - <b>Common Associates</b>
-            </br>11 - <b>Essential minerals</b> </br>12 - <b>Common ore minerals</b>
-            </br>13 - <b>Accessory minerals</b> </br></pre>'
+            - <b>Synonym</b> </br>2 - <b>Mixture</b> </br>3 - <b>see also</b> </br>4
+            - <b>Minerals structurally related to group</b> </br>5 - <b>Associated
+            Minerals at Type or First recorded Locality</b> </br>6 - <b>Epitaxial
+            Relationships of</b> </br>7 - <b>Polymorph of</b> </br>8 - <b>Isostructural
+            with</b> </br>9 - <b>Minerals chemically related to group</b> </br>10
+            - <b>Common Associates</b> </br>11 - <b>Essential minerals</b> </br>12
+            - <b>Common ore minerals</b> </br>13 - <b>Accessory minerals</b> </br></pre>'
         relation_type_text:
           type: string
           description: Relation type text
@@ -2988,6 +7364,75 @@ components:
       - mineral_id
       - relation_type
       - relation_type_text
+    RelationsApi:
+      type: object
+      properties:
+        rid:
+          type: integer
+          readOnly: true
+        min1:
+          type: integer
+          nullable: true
+          description: 'Geomaterial #1 in a relation record (usually child)'
+        min2:
+          type: integer
+          nullable: true
+          description: 'Geomaterial #2 in a relation record (usually parent)'
+        rel:
+          allOf:
+          - $ref: '#/components/schemas/RelEnum'
+          description: Relationship type
+          minimum: -2147483648
+          maximum: 2147483647
+      required:
+      - rel
+      - rid
+    Spacegroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        cclass:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Reference to the associated crystal class (point group). See
+            [Crystal classes](/crystalclasses/).
+        sgtext:
+          type: string
+          description: Crystallographic space group notation with symmetry operations.
+          maxLength: 50
+      required:
+      - cclass
+      - id
+      - sgtext
+    Spacegroupset:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        spacegroup:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Reference to the associated space group. See [Space groups](/spacegroups/)
+        cclass:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Reference to the associated crystal class (point group). See
+            [Crystal classes](/crystalclasses/).
+        sgstext:
+          type: string
+          description: Crystallographic space group label
+          maxLength: 50
+      required:
+      - cclass
+      - id
+      - sgstext
+      - spacegroup
     TenacityEnum:
       enum:
       - brittle
@@ -2999,11 +7444,12 @@ components:
       - fragile
       - malleable
       type: string
+    TypelocEnum:
+      enum:
+      - 0
+      - 1
+      type: integer
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
     tokenAuth:
       type: apiKey
       in: header

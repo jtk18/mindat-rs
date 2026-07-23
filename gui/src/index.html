@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mindat Explorer</title>
     <!-- Leaflet CSS and JS for map functionality -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin=""></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -518,7 +518,7 @@
             <div class="config-row">
                 <div class="input-group">
                     <label for="api-token">API Token (from mindat.org)</label>
-                    <input type="text" id="api-token" placeholder="Enter your API token (leave empty for anonymous)">
+                    <input type="password" id="api-token" placeholder="Enter your API token (leave empty for anonymous)">
                 </div>
                 <button class="primary" id="connect-btn">Connect</button>
                 <button class="secondary" id="disconnect-btn">Disconnect</button>
@@ -543,7 +543,6 @@
                     <li><button data-endpoint="localities-element">Localities by Element <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="dana8">Dana-8 Groups <span class="endpoint-badge auth">Auth</span></button></li>
                     <li><button data-endpoint="strunz10">Strunz-10 Classes <span class="endpoint-badge auth">Auth</span></button></li>
-                    <li><button data-endpoint="photocount">Photo Count <span class="endpoint-badge auth">Auth</span></button></li>
                 </ul>
             </aside>
 
@@ -629,23 +628,6 @@
                             <button class="primary" id="elements-search-btn">Search</button>
                         </div>
                         <div class="results-container" id="elements-results"></div>
-                    </div>
-                </div>
-
-                <!-- Countries Panel -->
-                <div id="panel-countries" class="panel hidden">
-                    <div class="panel-header">
-                        <h2>Countries</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="form-row">
-                            <div class="input-group" style="max-width: 120px;">
-                                <label for="countries-page">Page</label>
-                                <input type="number" id="countries-page" value="1" min="1">
-                            </div>
-                            <button class="primary" id="countries-btn">List Countries</button>
-                        </div>
-                        <div class="results-container" id="countries-results"></div>
                     </div>
                 </div>
 
@@ -803,18 +785,6 @@
                     </div>
                 </div>
 
-                <!-- Photo Count Panel -->
-                <div id="panel-photocount" class="panel hidden">
-                    <div class="panel-header">
-                        <h2>Photo Count Statistics</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="form-row">
-                            <button class="primary" id="photocount-btn">Get Photo Count</button>
-                        </div>
-                        <div class="results-container" id="photocount-results"></div>
-                    </div>
-                </div>
             </main>
         </div>
     </div>
@@ -1063,40 +1033,6 @@
             });
         }
 
-        function renderCountries(container, data) {
-            const results = data.results || [];
-            const count = data.count;
-
-            let html = `
-                <div class="results-header">
-                    <h3>Results</h3>
-                    <span class="results-count">${count} total</span>
-                </div>
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>ISO</th>
-                            <th>Continent</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            for (const c of results) {
-                html += `
-                    <tr>
-                        <td>${c.id}</td>
-                        <td><strong>${escapeHtml(c.text)}</strong></td>
-                        <td>${escapeHtml(c.iso)}</td>
-                        <td>${escapeHtml(c.continent)}</td>
-                    </tr>
-                `;
-            }
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
         function renderLocalities(container, data) {
             const results = data.results || [];
 
@@ -1222,8 +1158,6 @@
         addEnterKeyHandler('mineral-name', 'mineral-search-btn');
         addEnterKeyHandler('mineral-page', 'mineral-search-btn');
         addEnterKeyHandler('mineral-id', 'mineral-detail-btn');
-        addEnterKeyHandler('country-page', 'countries-btn');
-        addEnterKeyHandler('country-id', 'country-detail-btn');
         addEnterKeyHandler('locality-country', 'localities-btn');
         addEnterKeyHandler('locality-name', 'localities-btn');
         addEnterKeyHandler('elements-page', 'elements-search-btn');
@@ -1344,8 +1278,8 @@
                                 <tr><td><strong>Colour</strong></td><td>${escapeHtml(m.colour || '-')}</td></tr>
                                 <tr><td><strong>Streak</strong></td><td>${escapeHtml(m.streak || '-')}</td></tr>
                                 <tr><td><strong>Hardness</strong></td><td>${m.hmin || '-'} - ${m.hmax || '-'}</td></tr>
-                                <tr><td><strong>Density</strong></td><td>${m.dmeas || m.dcalc || '-'}</td></tr>
-                                <tr><td><strong>Discovery Year</strong></td><td>${m.discovery_year || '-'}</td></tr>
+                                <tr><td><strong>Density</strong></td><td>${escapeHtml(m.dmeas || m.dcalc || '-')}</td></tr>
+                                <tr><td><strong>Discovery Year</strong></td><td>${escapeHtml(m.discovery_year || '-')}</td></tr>
                                 <tr><td><strong>Space Group</strong></td><td>${escapeHtml(m.spacegroup || '-')}</td></tr>
                             </tbody>
                         </table>
@@ -1390,20 +1324,6 @@
                     page: page
                 });
                 renderMineralsWithPagination(container, result, 'elements-page', 'elements-search-btn');
-            } catch (e) {
-                showError(container, e);
-            }
-        });
-
-        // Countries
-        document.getElementById('countries-btn').addEventListener('click', async () => {
-            const container = document.getElementById('countries-results');
-            showLoading(container);
-            try {
-                const result = await invoke('list_countries', {
-                    page: parseInt(document.getElementById('countries-page').value) || 1
-                });
-                renderCountries(container, result);
             } catch (e) {
                 showError(container, e);
             }
@@ -1611,18 +1531,6 @@
             showLoading(container);
             try {
                 const result = await invoke('get_strunz10_classes');
-                showJson(container, result);
-            } catch (e) {
-                showError(container, e);
-            }
-        });
-
-        // Photo Count
-        document.getElementById('photocount-btn').addEventListener('click', async () => {
-            const container = document.getElementById('photocount-results');
-            showLoading(container);
-            try {
-                const result = await invoke('get_photo_count');
                 showJson(container, result);
             } catch (e) {
                 showError(container, e);

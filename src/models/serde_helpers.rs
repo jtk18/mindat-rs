@@ -68,6 +68,66 @@ where
     }
 }
 
+/// Deserialize a required i64 that the API may return as a JSON string.
+///
+/// Mindat sometimes returns integers as strings (e.g. `"42"`). Primary-key
+/// fields use this so a single string-encoded id doesn't fail the whole page.
+pub fn deserialize_i64<'de, D>(deserializer: D) -> Result<i64, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrNumber {
+        Number(i64),
+        String(String),
+    }
+
+    match StringOrNumber::deserialize(deserializer)? {
+        StringOrNumber::Number(n) => Ok(n),
+        StringOrNumber::String(s) => s.trim().parse().map_err(serde::de::Error::custom),
+    }
+}
+
+/// Deserialize a required i32 that the API may return as a JSON string.
+pub fn deserialize_i32<'de, D>(deserializer: D) -> Result<i32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrNumber {
+        Number(i32),
+        String(String),
+    }
+
+    match StringOrNumber::deserialize(deserializer)? {
+        StringOrNumber::Number(n) => Ok(n),
+        StringOrNumber::String(s) => s.trim().parse().map_err(serde::de::Error::custom),
+    }
+}
+
+/// Deserialize an optional i64 that might be an empty string.
+pub fn deserialize_optional_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrNumber {
+        String(String),
+        Number(i64),
+        Null,
+    }
+
+    match StringOrNumber::deserialize(deserializer)? {
+        StringOrNumber::String(s) if s.is_empty() => Ok(None),
+        StringOrNumber::String(s) => Ok(s.parse().ok()),
+        StringOrNumber::Number(n) => Ok(Some(n)),
+        StringOrNumber::Null => Ok(None),
+    }
+}
+
 /// Deserialize an optional `Vec<String>` that might be an empty string.
 pub fn deserialize_optional_vec_string<'de, D>(
     deserializer: D,
