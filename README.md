@@ -115,6 +115,39 @@ let query = LocalitiesQuery::new()
 let localities = client.localities(query).await?;
 ```
 
+### Find collecting localities near a place
+
+Mindat locality names encode the geographic hierarchy (site → district → county
+→ state → country), so a text filter zeroes in on an area. For example, mines
+and mineral occurrences in the Tucson Mountains, just west of Tucson, Arizona:
+
+```rust
+use mindat_rs::{MindatClient, LocalitiesQuery};
+
+let client = MindatClient::new("your-token");
+
+let query = LocalitiesQuery::new()
+    .country("USA")
+    .name_contains("Tucson Mountains") // Amole Mining District & nearby
+    .page_size(8);
+
+let localities = client.localities(query).await?;
+for loc in localities.results {
+    println!("{}: {}", loc.id, loc.txt.unwrap_or_default());
+}
+```
+
+Sample output — copper/lead/silver mines a few miles from downtown, known for
+wulfenite, vanadinite, chrysocolla, and malachite:
+
+```text
+3372: Old Yuma Mine, Tucson Mountain District Saguaro National Park, Amole Mining District, Tucson Mountains, Pima County, Arizona, USA
+11361: Gila Monster Mine, Jaynes, Amole Mining District, Tucson Mountains, Pima County, Arizona, USA
+20050: Saginaw Hill, Amole Mining District, Tucson Mountains, Pima County, Arizona, USA
+21125: Jaynes, Amole Mining District, Tucson Mountains, Pima County, Arizona, USA
+34526: Battle Axe Mine, Amole Mining District, Tucson Mountains, Pima County, Arizona, USA
+```
+
 ### Browse IMA minerals
 
 ```rust
