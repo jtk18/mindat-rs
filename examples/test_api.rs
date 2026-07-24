@@ -1,4 +1,6 @@
-use mindat_rs::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, MindatClient, ReferencesQuery};
+use mindat_rs::{
+    GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, MindatClient, ReferencesQuery,
+};
 
 #[tokio::main]
 async fn main() -> mindat_rs::Result<()> {

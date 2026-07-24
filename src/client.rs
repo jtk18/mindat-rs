@@ -182,10 +182,7 @@ impl std::fmt::Debug for MindatClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MindatClient")
             .field("base_url", &self.base_url.as_str())
-            .field(
-                "token",
-                &self.token.as_ref().map(|_| "***REDACTED***"),
-            )
+            .field("token", &self.token.as_ref().map(|_| "***REDACTED***"))
             .finish()
     }
 }
@@ -493,10 +490,7 @@ impl MindatClient {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn localities(
-        &self,
-        query: LocalitiesQuery,
-    ) -> Result<PaginatedResponse<Locality>> {
+    pub async fn localities(&self, query: LocalitiesQuery) -> Result<PaginatedResponse<Locality>> {
         // Note: `/localities/` uses page-number pagination (`page` / `page-size`);
         // the older cursor pagination was removed from the Mindat API.
         // It also keeps the `elements_inc` / `elements_exc` filter names
@@ -859,10 +853,7 @@ impl MindatClient {
     // ==================== References ====================
 
     /// List bibliographic references.
-    pub async fn references(
-        &self,
-        query: ReferencesQuery,
-    ) -> Result<PaginatedResponse<Reference>> {
+    pub async fn references(&self, query: ReferencesQuery) -> Result<PaginatedResponse<Reference>> {
         #[derive(serde::Serialize)]
         struct QueryParams {
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -945,8 +936,14 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             page: Option<i32>,
         }
-        self.get_with_query("/reference-authors/", &Query { ra_ref_id: ref_id, page })
-            .await
+        self.get_with_query(
+            "/reference-authors/",
+            &Query {
+                ra_ref_id: ref_id,
+                page,
+            },
+        )
+        .await
     }
 
     /// Get a specific reference-author link by ID.
@@ -959,7 +956,8 @@ impl MindatClient {
         &self,
         page: Option<i32>,
     ) -> Result<PaginatedResponse<ReferenceAuthorUnique>> {
-        self.list_page("/reference-authors-unique/", page, None).await
+        self.list_page("/reference-authors-unique/", page, None)
+            .await
     }
 
     /// Get a de-duplicated reference author by ID.
@@ -1191,9 +1189,15 @@ impl MindatClient {
             lstm_min: Option<i64>,
             #[serde(skip_serializing_if = "Option::is_none")]
             lstm_loc: Option<i64>,
-            #[serde(rename = "lstm_photocount__gte", skip_serializing_if = "Option::is_none")]
+            #[serde(
+                rename = "lstm_photocount__gte",
+                skip_serializing_if = "Option::is_none"
+            )]
             photocount_min: Option<i64>,
-            #[serde(rename = "lstm_photocount__lte", skip_serializing_if = "Option::is_none")]
+            #[serde(
+                rename = "lstm_photocount__lte",
+                skip_serializing_if = "Option::is_none"
+            )]
             photocount_max: Option<i64>,
             #[serde(skip_serializing_if = "Option::is_none")]
             ordering: Option<String>,
@@ -1233,7 +1237,8 @@ impl MindatClient {
             #[serde(skip_serializing_if = "Option::is_none")]
             exc: Option<&'a str>,
         }
-        self.get_with_query("/loc-by-min/", &Query { inc, exc }).await
+        self.get_with_query("/loc-by-min/", &Query { inc, exc })
+            .await
     }
 
     // ==================== Crystallography ====================

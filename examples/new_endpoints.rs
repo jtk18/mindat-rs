@@ -53,8 +53,12 @@ async fn main() {
     .await;
     report(
         "occurrence_statistics",
-        c.occurrence_statistics(OccurrenceStatisticsQuery::new().mineral(quartz).page_size(3))
-            .await,
+        c.occurrence_statistics(
+            OccurrenceStatisticsQuery::new()
+                .mineral(quartz)
+                .page_size(3),
+        )
+        .await,
         |p| format!("{} rows", p.results.len()),
     )
     .await;
@@ -103,7 +107,11 @@ async fn main() {
     {
         Ok(p) => {
             let systems: Vec<String> = p.results.iter().filter_map(|g| g.csystem.clone()).collect();
-            println!("  {} results, crystal systems: {:?}", p.results.len(), systems);
+            println!(
+                "  {} results, crystal systems: {:?}",
+                p.results.len(),
+                systems
+            );
         }
         Err(e) => println!("  FAIL geomaterials filter: {}", e),
     }

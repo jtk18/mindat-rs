@@ -4,8 +4,8 @@
 //! allowing Claude Desktop and other MCP clients to search for minerals, localities, and more.
 
 use mindat_rs::{
-    models::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, ReferencesQuery},
     MindatClient,
+    models::{GeomaterialsQuery, ImaMineralsQuery, LocalitiesQuery, ReferencesQuery},
 };
 use rmcp::{
     ServerHandler, ServiceExt,
@@ -155,11 +155,10 @@ impl MindatService {
 #[tool_router]
 impl MindatService {
     /// Search for minerals by name in the Mindat database.
-    #[tool(description = "Search for minerals by name in the Mindat database. Returns minerals matching the search query with properties like chemical formula, crystal system, hardness, and locality information.")]
-    async fn search_minerals(
-        &self,
-        Parameters(req): Parameters<SearchMineralsRequest>,
-    ) -> String {
+    #[tool(
+        description = "Search for minerals by name in the Mindat database. Returns minerals matching the search query with properties like chemical formula, crystal system, hardness, and locality information."
+    )]
+    async fn search_minerals(&self, Parameters(req): Parameters<SearchMineralsRequest>) -> String {
         let client = self.client.lock().await;
         let page = req.page.unwrap_or(1);
         let page_size = req.page_size.unwrap_or(20);
@@ -176,14 +175,17 @@ impl MindatService {
                     "total_pages": response.total_pages(page_size as usize),
                     "results": response.results
                 });
-                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+                serde_json::to_string_pretty(&result)
+                    .unwrap_or_else(|_| "Error formatting response".to_string())
             }
             Err(e) => format!("Error searching minerals: {}", e),
         }
     }
 
     /// Search for IMA-approved minerals. This endpoint works without authentication.
-    #[tool(description = "Search for IMA (International Mineralogical Association) approved minerals. This works without an API key and returns official mineral names, formulas, symbols, and approval information.")]
+    #[tool(
+        description = "Search for IMA (International Mineralogical Association) approved minerals. This works without an API key and returns official mineral names, formulas, symbols, and approval information."
+    )]
     async fn search_ima_minerals(
         &self,
         Parameters(req): Parameters<SearchImaMineralsRequest>,
@@ -204,28 +206,31 @@ impl MindatService {
                     "total_pages": response.total_pages(page_size as usize),
                     "results": response.results
                 });
-                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+                serde_json::to_string_pretty(&result)
+                    .unwrap_or_else(|_| "Error formatting response".to_string())
             }
             Err(e) => format!("Error searching IMA minerals: {}", e),
         }
     }
 
     /// Get detailed information about a specific mineral by its Mindat ID.
-    #[tool(description = "Get detailed information about a specific mineral by its Mindat ID. Returns comprehensive data including chemical formula, physical properties, crystal system, optical properties, and related minerals.")]
-    async fn get_mineral(
-        &self,
-        Parameters(req): Parameters<GetMineralRequest>,
-    ) -> String {
+    #[tool(
+        description = "Get detailed information about a specific mineral by its Mindat ID. Returns comprehensive data including chemical formula, physical properties, crystal system, optical properties, and related minerals."
+    )]
+    async fn get_mineral(&self, Parameters(req): Parameters<GetMineralRequest>) -> String {
         let client = self.client.lock().await;
 
         match client.geomaterial(req.id).await {
-            Ok(mineral) => serde_json::to_string_pretty(&mineral).unwrap_or_else(|_| "Error formatting response".to_string()),
+            Ok(mineral) => serde_json::to_string_pretty(&mineral)
+                .unwrap_or_else(|_| "Error formatting response".to_string()),
             Err(e) => format!("Error getting mineral {}: {}", req.id, e),
         }
     }
 
     /// Search for minerals containing specific chemical elements.
-    #[tool(description = "Search for minerals by their chemical composition. Specify elements that must be present and optionally elements that must be absent. Uses standard element symbols like 'Cu', 'Fe', 'S'.")]
+    #[tool(
+        description = "Search for minerals by their chemical composition. Specify elements that must be present and optionally elements that must be absent. Uses standard element symbols like 'Cu', 'Fe', 'S'."
+    )]
     async fn search_by_elements(
         &self,
         Parameters(req): Parameters<SearchByElementsRequest>,
@@ -255,29 +260,32 @@ impl MindatService {
                     "total_pages": response.total_pages(20),
                     "results": response.results
                 });
-                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+                serde_json::to_string_pretty(&result)
+                    .unwrap_or_else(|_| "Error formatting response".to_string())
             }
             Err(e) => format!("Error searching by elements: {}", e),
         }
     }
 
     /// Quick search for minerals - returns fast autocomplete-style results.
-    #[tool(description = "Perform a quick autocomplete-style search for minerals. Returns fast results suitable for searching as you type.")]
-    async fn quick_search(
-        &self,
-        Parameters(req): Parameters<QuickSearchRequest>,
-    ) -> String {
+    #[tool(
+        description = "Perform a quick autocomplete-style search for minerals. Returns fast results suitable for searching as you type."
+    )]
+    async fn quick_search(&self, Parameters(req): Parameters<QuickSearchRequest>) -> String {
         let client = self.client.lock().await;
         let size = req.size.unwrap_or(10);
 
         match client.geomaterials_search(&req.query, Some(size)).await {
-            Ok(results) => serde_json::to_string_pretty(&results).unwrap_or_else(|_| "Error formatting response".to_string()),
+            Ok(results) => serde_json::to_string_pretty(&results)
+                .unwrap_or_else(|_| "Error formatting response".to_string()),
             Err(e) => format!("Error in quick search: {}", e),
         }
     }
 
     /// Search for mineral localities (mining sites, outcrops, etc.)
-    #[tool(description = "Search for mineral localities (mines, outcrops, quarries, etc.) by country, name, or elements found there. Use country abbreviations like 'USA', 'UK'. Returns location coordinates and mineral information.")]
+    #[tool(
+        description = "Search for mineral localities (mines, outcrops, quarries, etc.) by country, name, or elements found there. Use country abbreviations like 'USA', 'UK'. Returns location coordinates and mineral information."
+    )]
     async fn search_localities(
         &self,
         Parameters(req): Parameters<SearchLocalitiesRequest>,
@@ -310,14 +318,17 @@ impl MindatService {
                 let result = serde_json::json!({
                     "results": response.results
                 });
-                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+                serde_json::to_string_pretty(&result)
+                    .unwrap_or_else(|_| "Error formatting response".to_string())
             }
             Err(e) => format!("Error searching localities: {}", e),
         }
     }
 
     /// Search for localities near a GPS coordinate.
-    #[tool(description = "Search for mineral localities near a specific GPS coordinate. Specify latitude, longitude, and search radius in kilometers. Add country or name filters to narrow results and avoid timeouts.")]
+    #[tool(
+        description = "Search for mineral localities near a specific GPS coordinate. Specify latitude, longitude, and search radius in kilometers. Add country or name filters to narrow results and avoid timeouts."
+    )]
     async fn search_localities_by_gps(
         &self,
         Parameters(req): Parameters<SearchLocalitiesByGpsRequest>,
@@ -357,7 +368,8 @@ impl MindatService {
                     // Filter results within the radius
                     for loc in &response.results {
                         if let (Some(lat), Some(lon)) = (loc.latitude, loc.longitude) {
-                            if lat >= min_lat && lat <= max_lat && lon >= min_lon && lon <= max_lon {
+                            if lat >= min_lat && lat <= max_lat && lon >= min_lon && lon <= max_lon
+                            {
                                 // Check actual distance using Haversine formula
                                 let dlat = (lat - req.latitude).to_radians();
                                 let dlon = (lon - req.longitude).to_radians();
@@ -397,25 +409,28 @@ impl MindatService {
             "count": all_results.len(),
             "results": all_results
         });
-        serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+        serde_json::to_string_pretty(&result)
+            .unwrap_or_else(|_| "Error formatting response".to_string())
     }
 
     /// Get detailed information about a specific locality.
-    #[tool(description = "Get detailed information about a specific locality by its Mindat ID. Returns location data, coordinates, minerals found there, and administrative information.")]
-    async fn get_locality(
-        &self,
-        Parameters(req): Parameters<GetLocalityRequest>,
-    ) -> String {
+    #[tool(
+        description = "Get detailed information about a specific locality by its Mindat ID. Returns location data, coordinates, minerals found there, and administrative information."
+    )]
+    async fn get_locality(&self, Parameters(req): Parameters<GetLocalityRequest>) -> String {
         let client = self.client.lock().await;
 
         match client.locality(req.id).await {
-            Ok(locality) => serde_json::to_string_pretty(&locality).unwrap_or_else(|_| "Error formatting response".to_string()),
+            Ok(locality) => serde_json::to_string_pretty(&locality)
+                .unwrap_or_else(|_| "Error formatting response".to_string()),
             Err(e) => format!("Error getting locality {}: {}", req.id, e),
         }
     }
 
     /// Search bibliographic references.
-    #[tool(description = "Search the Mindat literature/reference database by free text (title, journal, author, etc.). Returns bibliographic records. Requires an API key.")]
+    #[tool(
+        description = "Search the Mindat literature/reference database by free text (title, journal, author, etc.). Returns bibliographic records. Requires an API key."
+    )]
     async fn search_references(
         &self,
         Parameters(req): Parameters<SearchReferencesRequest>,
@@ -438,34 +453,40 @@ impl MindatService {
                     "count": response.count,
                     "results": response.results
                 });
-                serde_json::to_string_pretty(&result).unwrap_or_else(|_| "Error formatting response".to_string())
+                serde_json::to_string_pretty(&result)
+                    .unwrap_or_else(|_| "Error formatting response".to_string())
             }
             Err(e) => format!("Error searching references: {}", e),
         }
     }
 
     /// Get Dana 8th edition classification groups.
-    #[tool(description = "Get the Dana 8th edition mineral classification system groups. This is a hierarchical classification system based on mineral chemistry and structure.")]
+    #[tool(
+        description = "Get the Dana 8th edition mineral classification system groups. This is a hierarchical classification system based on mineral chemistry and structure."
+    )]
     async fn get_dana_groups(&self) -> String {
         let client = self.client.lock().await;
 
         match client.dana8_groups().await {
-            Ok(groups) => serde_json::to_string_pretty(&groups).unwrap_or_else(|_| "Error formatting response".to_string()),
+            Ok(groups) => serde_json::to_string_pretty(&groups)
+                .unwrap_or_else(|_| "Error formatting response".to_string()),
             Err(e) => format!("Error getting Dana groups: {}", e),
         }
     }
 
     /// Get Nickel-Strunz 10th edition classification classes.
-    #[tool(description = "Get the Nickel-Strunz 10th edition mineral classification system classes. This is an internationally recognized classification system for minerals.")]
+    #[tool(
+        description = "Get the Nickel-Strunz 10th edition mineral classification system classes. This is an internationally recognized classification system for minerals."
+    )]
     async fn get_strunz_classes(&self) -> String {
         let client = self.client.lock().await;
 
         match client.strunz10_classes().await {
-            Ok(classes) => serde_json::to_string_pretty(&classes).unwrap_or_else(|_| "Error formatting response".to_string()),
+            Ok(classes) => serde_json::to_string_pretty(&classes)
+                .unwrap_or_else(|_| "Error formatting response".to_string()),
             Err(e) => format!("Error getting Strunz classes: {}", e),
         }
     }
-
 }
 
 #[tool_handler]
