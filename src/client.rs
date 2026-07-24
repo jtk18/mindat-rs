@@ -43,6 +43,66 @@ fn join_ids64(ids: &[i64]) -> String {
         .join(",")
 }
 
+/// Replace raw ASCII control characters (U+0000–U+001F) with spaces so a response
+/// containing unescaped control characters still parses.
+///
+/// The Mindat API sometimes returns a literal newline inside a free-text field
+/// (e.g. a locality's `description_short`), which is invalid JSON that
+/// `serde_json` rejects. Control bytes are never structurally required in JSON,
+/// and escaped sequences like `\n` are ordinary ASCII (`\` + `n`) and are left
+/// untouched. Borrows the input unchanged when there is nothing to fix.
+fn sanitize_control_chars(s: &str) -> std::borrow::Cow<'_, str> {
+    if s.bytes().any(|b| b < 0x20) {
+        std::borrow::Cow::Owned(
+            s.chars()
+                .map(|c| if (c as u32) < 0x20 { ' ' } else { c })
+                .collect(),
+        )
+    } else {
+        std::borrow::Cow::Borrowed(s)
+    }
+}
+
+/// Parse a JSON value that may be a number or a numeric string into a positive i32
+/// (Mindat sometimes returns IDs as strings, e.g. from `/geoloc-point/`).
+fn json_id(v: &serde_json::Value) -> Option<i32> {
+    let n = match v {
+        serde_json::Value::Number(n) => n.as_i64(),
+        serde_json::Value::String(s) => s.trim().parse::<i64>().ok(),
+        _ => None,
+    }?;
+    (n > 0 && n <= i32::MAX as i64).then_some(n as i32)
+}
+
+/// Maximum number of concurrent geo-probe requests issued by the radius helpers.
+const GEO_GRID_CONCURRENCY: usize = 12;
+
+/// A hexagonal grid of probe points `(lat, lon, per-point distance km)` covering a
+/// radius. Mindat's geo endpoints return only ~10 localities per point, so real
+/// coverage needs a dense grid with a small per-point distance (a coarse grid
+/// clusters near each probe and misses sites). Spacing scales with the radius and
+/// each probe's distance equals the spacing so the cells overlap.
+fn hex_grid(lat: f64, lon: f64, radius_km: f64) -> Vec<(f64, f64, f64)> {
+    let s = (radius_km / 4.5).clamp(35.0, 90.0);
+    let coslat = lat.to_radians().cos().abs().max(0.05);
+    let n = (radius_km / s).ceil() as i64 + 1;
+    let mut pts = Vec::new();
+    for j in -n..=n {
+        for i in -n..=n {
+            let x = s * (i as f64 + 0.5 * (j.rem_euclid(2) as f64));
+            let y = s * (j as f64) * 0.866;
+            if (x * x + y * y).sqrt() <= radius_km {
+                pts.push((lat + y / 111.0, lon + x / (111.0 * coslat), s));
+            }
+        }
+    }
+    if pts.is_empty() {
+        pts.push((lat, lon, radius_km.max(1.0)));
+    }
+    pts.truncate(96);
+    pts
+}
+
 /// Percent-encode a value that will be interpolated into a URL path segment,
 /// so caller-supplied strings (e.g. ISBN/DDC/LCC codes) can't inject `../`,
 /// extra path segments, or `?`/`#` into the request target.
@@ -251,7 +311,9 @@ impl MindatClient {
 
         if status.is_success() {
             let text = response.text().await?;
-            serde_json::from_str(&text).map_err(MindatError::from)
+            // The API occasionally emits unescaped control characters (e.g. raw
+            // newlines in free-text fields); scrub them so parsing doesn't fail.
+            serde_json::from_str(&sanitize_control_chars(&text)).map_err(MindatError::from)
         } else {
             let status_code = status.as_u16();
             let mut message = response
@@ -1315,6 +1377,127 @@ impl MindatClient {
         self.post_json("/geomin-poly/", &body).await
     }
 
+    /// All locality IDs within `radius_km` of a point, de-duplicated.
+    ///
+    /// `/geoloc-point/` returns only ~10 localities per call regardless of the
+    /// requested distance, so this probes a hexagonal grid of points across the
+    /// radius concurrently and merges the results — surfacing sites well away from
+    /// the exact center. Probe failures are skipped rather than failing the whole
+    /// search.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # async fn example() -> mindat_rs::Result<()> {
+    /// let client = mindat_rs::MindatClient::new("your-token");
+    /// let ids = client.localities_within(32.22, -110.97, 80.0).await?;
+    /// println!("{} localities within ~80 km", ids.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn localities_within(
+        &self,
+        latitude: f64,
+        longitude: f64,
+        radius_km: f64,
+    ) -> Result<Vec<i32>> {
+        let sem = std::sync::Arc::new(tokio::sync::Semaphore::new(GEO_GRID_CONCURRENCY));
+        let mut set = tokio::task::JoinSet::new();
+        for (plat, plon, pdist) in hex_grid(latitude, longitude, radius_km) {
+            let client = self.clone();
+            let sem = std::sync::Arc::clone(&sem);
+            set.spawn(async move {
+                let _permit = sem.acquire_owned().await.ok();
+                let body = serde_json::json!({
+                    "point": { "lat": plat, "lon": plon },
+                    "distance": format!("{}km", pdist.round().max(1.0) as i64),
+                });
+                match client.geoloc_point(body).await {
+                    Ok(v) => v
+                        .as_array()
+                        .map(|a| a.iter().filter_map(json_id).collect::<Vec<_>>())
+                        .unwrap_or_default(),
+                    Err(_) => Vec::new(),
+                }
+            });
+        }
+        let mut ids: Vec<i32> = Vec::new();
+        while let Some(res) = set.join_next().await {
+            if let Ok(mut v) = res {
+                ids.append(&mut v);
+            }
+        }
+        ids.sort_unstable();
+        ids.dedup();
+        Ok(ids)
+    }
+
+    /// Minerals found near a point, mapped to the locality IDs that contain them:
+    /// `mineral_id -> [locality_id, ...]`, de-duplicated.
+    ///
+    /// Like [`localities_within`](Self::localities_within), this works around the
+    /// ~10-per-point cap on `/geomin-point/` by probing a hexagonal grid across
+    /// the radius and merging. To find the localities near a point that contain a
+    /// given species, look up its ID in the returned map.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # async fn example() -> mindat_rs::Result<()> {
+    /// let client = mindat_rs::MindatClient::new("your-token");
+    /// let near = client.minerals_within(42.93, -76.57, 320.0).await?;
+    /// let quartz_localities = near.get(&3337).cloned().unwrap_or_default();
+    /// println!("{} nearby localities contain quartz", quartz_localities.len());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn minerals_within(
+        &self,
+        latitude: f64,
+        longitude: f64,
+        radius_km: f64,
+    ) -> Result<std::collections::HashMap<i32, Vec<i32>>> {
+        let sem = std::sync::Arc::new(tokio::sync::Semaphore::new(GEO_GRID_CONCURRENCY));
+        let mut set = tokio::task::JoinSet::new();
+        for (plat, plon, pdist) in hex_grid(latitude, longitude, radius_km) {
+            let client = self.clone();
+            let sem = std::sync::Arc::clone(&sem);
+            set.spawn(async move {
+                let _permit = sem.acquire_owned().await.ok();
+                let body = serde_json::json!({
+                    "point": { "lat": plat, "lon": plon },
+                    "distance": format!("{}km", pdist.round().max(1.0) as i64),
+                });
+                let mut out: std::collections::HashMap<i32, Vec<i32>> =
+                    std::collections::HashMap::new();
+                // geomin-point -> { "<mineral_id>": [locality_id, ...], ... }
+                if let Ok(serde_json::Value::Object(map)) = client.geomin_point(body).await {
+                    for (k, v) in map {
+                        if let (Ok(mid), Some(arr)) = (k.parse::<i32>(), v.as_array()) {
+                            out.entry(mid)
+                                .or_default()
+                                .extend(arr.iter().filter_map(json_id));
+                        }
+                    }
+                }
+                out
+            });
+        }
+        let mut merged: std::collections::HashMap<i32, Vec<i32>> = std::collections::HashMap::new();
+        while let Some(res) = set.join_next().await {
+            if let Ok(map) = res {
+                for (mid, locs) in map {
+                    merged.entry(mid).or_default().extend(locs);
+                }
+            }
+        }
+        for locs in merged.values_mut() {
+            locs.sort_unstable();
+            locs.dedup();
+        }
+        Ok(merged)
+    }
+
     // ==================== Exports ====================
 
     /// List the available bulk data exports (CSV/JSON download links).
@@ -1396,4 +1579,65 @@ impl Default for MindatClientBuilder {
     fn default() -> Self {
         Self::new()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sanitize_replaces_raw_control_chars() {
+        // A raw newline inside a JSON string is invalid; scrubbing makes it parse.
+        let bad = "{\"a\": \"line1\nline2\ttab\"}";
+        let cleaned = sanitize_control_chars(bad);
+        assert!(!cleaned.bytes().any(|b| b < 0x20));
+        let v: serde_json::Value = serde_json::from_str(&cleaned).unwrap();
+        assert_eq!(v["a"], "line1 line2 tab");
+    }
+
+    #[test]
+    fn sanitize_leaves_clean_json_borrowed_and_intact() {
+        let good = "{\"a\":\"b\",\"n\":1}";
+        let cleaned = sanitize_control_chars(good);
+        assert!(matches!(cleaned, std::borrow::Cow::Borrowed(_)));
+        // Escaped sequences (backslash-n) are ordinary bytes and untouched.
+        let esc = "{\"a\":\"x\\ny\"}";
+        let c2 = sanitize_control_chars(esc);
+        let v: serde_json::Value = serde_json::from_str(&c2).unwrap();
+        assert_eq!(v["a"], "x\ny");
+    }
+
+    #[test]
+    fn json_id_accepts_numbers_and_strings() {
+        assert_eq!(json_id(&serde_json::json!(216256)), Some(216256));
+        assert_eq!(json_id(&serde_json::json!("216256")), Some(216256));
+        assert_eq!(json_id(&serde_json::json!(0)), None);
+        assert_eq!(json_id(&serde_json::json!("abc")), None);
+    }
+
+    #[test]
+    fn hex_grid_covers_radius_and_scales() {
+        // Small radius -> a single center probe.
+        let small = hex_grid(42.0, -76.0, 20.0);
+        assert_eq!(small.len(), 1);
+        // Large radius -> many probes, all within the radius, bounded.
+        let big = hex_grid(42.9317, -76.5661, 320.0);
+        assert!(big.len() > 30 && big.len() <= 96);
+        for (la, lo, d) in &big {
+            let dist = super::haversine_test(42.9317, -76.5661, *la, *lo);
+            assert!(dist <= 320.0 + 1.0);
+            assert!(*d >= 35.0 && *d <= 90.0);
+        }
+    }
+}
+
+// Small great-circle helper used only by tests above.
+#[cfg(test)]
+pub(crate) fn haversine_test(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
+    let r = 6371.0_f64;
+    let dlat = (lat2 - lat1).to_radians();
+    let dlon = (lon2 - lon1).to_radians();
+    let a = (dlat / 2.0).sin().powi(2)
+        + lat1.to_radians().cos() * lat2.to_radians().cos() * (dlon / 2.0).sin().powi(2);
+    2.0 * r * a.sqrt().atan2((1.0 - a).sqrt())
 }

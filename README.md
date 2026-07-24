@@ -223,6 +223,8 @@ let client = MindatClient::builder()
 | `space_group_sets(page)` / `space_group_set(id)` | GET | Space group sets |
 | `relations(query)` / `relation(id)` | GET | Relations between minerals |
 | `geoloc_point` / `geoloc_poly` / `geomin_point` / `geomin_poly` | POST | Geospatial point/polygon queries |
+| `localities_within(lat, lon, radius_km)` | — | All locality IDs within a radius (grids the ~10/point cap) |
+| `minerals_within(lat, lon, radius_km)` | — | Minerals near a point → the locality IDs that contain them |
 | `exports()` | GET | Bulk data export links |
 | `dana8_groups()` / `dana8_subgroups()` / `dana8(id)` | GET | Dana 8th ed. classification |
 | `strunz10_classes()` / `strunz10_subclasses()` / `strunz10_families()` / `strunz10(id)` | GET | Nickel-Strunz 10th ed. classification |
@@ -230,6 +232,17 @@ let client = MindatClient::builder()
 > **Note:** The upstream `/countries/`, `/photocount/`, and `/locgeoregion2/`
 > endpoints were removed from the Mindat v1 API. Filter localities by country
 > with `LocalitiesQuery::country("USA")` instead of a countries list.
+
+> **Geospatial radius search:** the raw `/geoloc-point/` and `/geomin-point/`
+> endpoints return only ~10 localities per point regardless of distance. The
+> [`localities_within`](MindatClient::localities_within) and
+> [`minerals_within`](MindatClient::minerals_within) helpers probe a hex grid of
+> points across the radius concurrently and merge the results, so you get full
+> coverage from a single call.
+
+> **Malformed responses:** the API occasionally emits unescaped control characters
+> (e.g. raw newlines in free-text fields like `description_short`) which is invalid
+> JSON. Responses are sanitized before parsing so these records no longer fail.
 
 ## Error Handling
 
